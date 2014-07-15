@@ -1,0 +1,57 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace IronTjs.Compiler.Ast
+{
+	public class TryStatement : Statement
+	{
+		public TryStatement(Statement body, CatchBlock catchBlock)
+		{
+			Body = body;
+			CatchBlock = catchBlock;
+			Body.Parent = CatchBlock.Parent = this;
+		}
+
+		System.Linq.Expressions.ParameterExpression catchVariable = System.Linq.Expressions.Expression.Parameter(typeof(Exception));
+
+		public Statement Body { get; private set; }
+
+		public CatchBlock CatchBlock { get; private set; }
+
+		public override System.Linq.Expressions.Expression Transform()
+		{
+			var body = Body.Transform();
+			var catchBlock = CatchBlock.Transform();
+			return System.Linq.Expressions.Expression.TryCatch(body, catchBlock);
+		}
+	}
+
+	public class CatchBlock : Node, INameResolver
+	{
+		public CatchBlock(string variableName, Statement body)
+		{
+			Variable = System.Linq.Expressions.Expression.Variable(typeof(Exception), variableName);
+			Body = body;
+			Body.Parent = this;
+		}
+
+		public System.Linq.Expressions.ParameterExpression Variable { get; private set; }
+
+		public Statement Body { get; private set; }
+
+		public System.Linq.Expressions.CatchBlock Transform()
+		{
+			var body = Body.Transform();
+			return System.Linq.Expressions.Expression.Catch(Variable, body);
+		}
+
+		public System.Linq.Expressions.Expression ResolveForRead(string name) { return name == Variable.Name ? Variable : null; }
+
+		public System.Linq.Expressions.Expression ResolveForWrite(string name, System.Linq.Expressions.Expression value) { return null; }
+
+		public System.Linq.Expressions.Expression DeclareVariable(string name, System.Linq.Expressions.Expression value) { return null; }
+	}
+}
