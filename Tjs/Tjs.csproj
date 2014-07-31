@@ -48,6 +48,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Builtins\TjsString.cs" />
     <Compile Include="Builtins\TjsVoid.cs" />
     <Compile Include="Compiler\Ast\Statements\Block.cs" />
     <Compile Include="Compiler\Ast\ClassDefinition.cs" />
@@ -81,16 +82,21 @@
     <Compile Include="Compiler\Ast\Expressions\UnaryExpression.cs" />
     <Compile Include="Compiler\Ast\Expressions\VariableDeclarationExpression.cs" />
     <Compile Include="Compiler\Ast\Statements\WithStatement.cs" />
-    <Compile Include="Compiler\Parser\Parser.cs" />
-    <Compile Include="Compiler\Parser\Tokenizer.cs" />
-    <Compile Include="Compiler\Parser\Token.cs" />
+    <Compile Include="Compiler\Parser.cs" />
+    <Compile Include="Compiler\Tokenizer.cs" />
+    <Compile Include="Compiler\Token.cs" />
     <Compile Include="Hosting\TjsCommandLine.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Runtime\Binding\Binders.cs" />
     <Compile Include="Runtime\Binding\TjsBinaryOperationBinder.cs" />
     <Compile Include="Runtime\Binding\TjsBinder.cs" />
+    <Compile Include="Runtime\Binding\TjsConvertBinder.cs" />
     <Compile Include="Runtime\Binding\TjsGetMemberBinder.cs" />
+    <Compile Include="Runtime\Binding\TjsInvokeBinder.cs" />
+    <Compile Include="Runtime\Binding\TjsOperationKind.cs" />
     <Compile Include="Runtime\Binding\TjsOverloadResolver.cs" />
     <Compile Include="Runtime\Binding\TjsSetMemberBinder.cs" />
+    <Compile Include="Runtime\Binding\TjsUnaryOperationBinder.cs" />
     <Compile Include="Runtime\TjsContext.cs" />
     <Compile Include="Runtime\TjsScriptCode.cs" />
     <Compile Include="Utils.cs" />

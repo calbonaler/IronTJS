@@ -13,7 +13,12 @@ namespace IronTjs.Hosting
 		protected override void ExecuteCommand(string command)
 		{
 			var result = ExecuteCommand(Engine.CreateScriptSourceFromString(command, SourceCodeKind.InteractiveCode));
-			Console.WriteLine(result != null ? result.ToString() : "null", Style.Out);
+			if (result == null)
+				Console.WriteLine("null", Style.Out);
+			else if (result.GetType() == typeof(string))
+				Console.WriteLine(string.Format("\"{0}\"", result), Style.Out);
+			else
+				Console.WriteLine(result.ToString(), Style.Out);
 		}
 	}
 }

@@ -5,11 +5,12 @@ using System.Text;
 using System.Threading.Tasks;
 using IronTjs.Builtins;
 using IronTjs.Compiler.Ast;
+using IronTjs.Runtime.Binding;
 using Microsoft.Scripting;
 using Microsoft.Scripting.Runtime;
 using Microsoft.Scripting.Utils;
 
-namespace IronTjs.Compiler.Parser
+namespace IronTjs.Compiler
 {
 	public class Parser
 	{
@@ -408,37 +409,37 @@ namespace IronTjs.Compiler.Parser
 		{
 			var exp = ParseConditionalExpression();
 			if (Accept(TokenType.SymbolEquals) != null)
-				return new BinaryExpression(exp, ParseAssignmentExpression(), BinaryExpressionType.Assign);
+				return new BinaryExpression(exp, ParseAssignmentExpression(), TjsOperationKind.Assign);
 			else if (Accept(TokenType.SymbolAsteriskEquals) != null)
-				return new BinaryExpression(exp, ParseAssignmentExpression(), BinaryExpressionType.MultiplyAssign);
+				return new BinaryExpression(exp, ParseAssignmentExpression(), TjsOperationKind.MultiplyAssign);
 			else if (Accept(TokenType.SymbolSlashEquals) != null)
-				return new BinaryExpression(exp, ParseAssignmentExpression(), BinaryExpressionType.DivideAssign);
+				return new BinaryExpression(exp, ParseAssignmentExpression(), TjsOperationKind.DivideAssign);
 			else if (Accept(TokenType.SymbolBackSlashEquals) != null)
-				return new BinaryExpression(exp, ParseAssignmentExpression(), BinaryExpressionType.FloorDivideAssign);
+				return new BinaryExpression(exp, ParseAssignmentExpression(), TjsOperationKind.FloorDivideAssign);
 			else if (Accept(TokenType.SymbolPercentEquals) != null)
-				return new BinaryExpression(exp, ParseAssignmentExpression(), BinaryExpressionType.ModuloAssign);
+				return new BinaryExpression(exp, ParseAssignmentExpression(), TjsOperationKind.ModuloAssign);
 			else if (Accept(TokenType.SymbolPlusEquals) != null)
-				return new BinaryExpression(exp, ParseAssignmentExpression(), BinaryExpressionType.AddAssign);
+				return new BinaryExpression(exp, ParseAssignmentExpression(), TjsOperationKind.AddAssign);
 			else if (Accept(TokenType.SymbolMinusEquals) != null)
-				return new BinaryExpression(exp, ParseAssignmentExpression(), BinaryExpressionType.SubtractAssign);
+				return new BinaryExpression(exp, ParseAssignmentExpression(), TjsOperationKind.SubtractAssign);
 			else if (Accept(TokenType.SymbolDoubleLessThanEquals) != null)
-				return new BinaryExpression(exp, ParseAssignmentExpression(), BinaryExpressionType.LeftShiftAssign);
+				return new BinaryExpression(exp, ParseAssignmentExpression(), TjsOperationKind.LeftShiftAssign);
 			else if (Accept(TokenType.SymbolDoubleGreaterThanEquals) != null)
-				return new BinaryExpression(exp, ParseAssignmentExpression(), BinaryExpressionType.ArithmeticRightShiftAssign);
+				return new BinaryExpression(exp, ParseAssignmentExpression(), TjsOperationKind.RightShiftArithmeticAssign);
 			else if (Accept(TokenType.SymbolTripleGreaterThanEquals) != null)
-				return new BinaryExpression(exp, ParseAssignmentExpression(), BinaryExpressionType.LogicalRightShiftAssign);
+				return new BinaryExpression(exp, ParseAssignmentExpression(), TjsOperationKind.RightShiftLogicalAssign);
 			else if (Accept(TokenType.SymbolAmpersandEquals) != null)
-				return new BinaryExpression(exp, ParseAssignmentExpression(), BinaryExpressionType.BitwiseAndAssign);
+				return new BinaryExpression(exp, ParseAssignmentExpression(), TjsOperationKind.AndAssign);
 			else if (Accept(TokenType.SymbolCircumflexEquals) != null)
-				return new BinaryExpression(exp, ParseAssignmentExpression(), BinaryExpressionType.BitwiseXorAssign);
+				return new BinaryExpression(exp, ParseAssignmentExpression(), TjsOperationKind.ExclusiveOrAssign);
 			else if (Accept(TokenType.SymbolVerticalLineEquals) != null)
-				return new BinaryExpression(exp, ParseAssignmentExpression(), BinaryExpressionType.BitwiseOrAssign);
+				return new BinaryExpression(exp, ParseAssignmentExpression(), TjsOperationKind.OrAssign);
 			else if (Accept(TokenType.SymbolDoubleAmpersandEquals) != null)
-				return new BinaryExpression(exp, ParseAssignmentExpression(), BinaryExpressionType.LogicalAndAssign);
+				return new BinaryExpression(exp, ParseAssignmentExpression(), TjsOperationKind.AndAlsoAssign);
 			else if (Accept(TokenType.SymbolDoubleVerticalLineEquals) != null)
-				return new BinaryExpression(exp, ParseAssignmentExpression(), BinaryExpressionType.LogicalOrAssign);
+				return new BinaryExpression(exp, ParseAssignmentExpression(), TjsOperationKind.OrElseAssign);
 			else if (Accept(TokenType.SymbolLessThanMinusGreaterThan) != null)
-				return new BinaryExpression(exp, ParseAssignmentExpression(), BinaryExpressionType.Exchange);
+				return new BinaryExpression(exp, ParseAssignmentExpression(), TjsOperationKind.Exchange);
 			else
 				return exp;
 		}
@@ -460,7 +461,7 @@ namespace IronTjs.Compiler.Parser
 		{
 			var exp = ParseLogicalAndExpression();
 			while (Accept(TokenType.SymbolDoubleVerticalLine) != null)
-				exp = new BinaryExpression(exp, ParseLogicalAndExpression(), BinaryExpressionType.LogicalOr);
+				exp = new BinaryExpression(exp, ParseLogicalAndExpression(), TjsOperationKind.OrElse);
 			return exp;
 		}
 
@@ -468,7 +469,7 @@ namespace IronTjs.Compiler.Parser
 		{
 			var exp = ParseBitwiseOrExpression();
 			while (Accept(TokenType.SymbolDoubleAmpersand) != null)
-				exp = new BinaryExpression(exp, ParseBitwiseOrExpression(), BinaryExpressionType.LogicalAnd);
+				exp = new BinaryExpression(exp, ParseBitwiseOrExpression(), TjsOperationKind.AndAlso);
 			return exp;
 		}
 
@@ -476,7 +477,7 @@ namespace IronTjs.Compiler.Parser
 		{
 			var exp = ParseBitwiseXorExpression();
 			while (Accept(TokenType.SymbolVerticalLine) != null)
-				exp = new BinaryExpression(exp, ParseBitwiseXorExpression(), BinaryExpressionType.BitwiseOr);
+				exp = new BinaryExpression(exp, ParseBitwiseXorExpression(), TjsOperationKind.Or);
 			return exp;
 		}
 
@@ -484,7 +485,7 @@ namespace IronTjs.Compiler.Parser
 		{
 			var exp = ParseBitwiseAndExpression();
 			while (Accept(TokenType.SymbolCircumflex) != null)
-				exp = new BinaryExpression(exp, ParseBitwiseAndExpression(), BinaryExpressionType.BitwiseXor);
+				exp = new BinaryExpression(exp, ParseBitwiseAndExpression(), TjsOperationKind.ExclusiveOr);
 			return exp;
 		}
 
@@ -492,7 +493,7 @@ namespace IronTjs.Compiler.Parser
 		{
 			var exp = ParseEqualityExpression();
 			while (Accept(TokenType.SymbolAmpersand) != null)
-				exp = new BinaryExpression(exp, ParseEqualityExpression(), BinaryExpressionType.BitwiseAnd);
+				exp = new BinaryExpression(exp, ParseEqualityExpression(), TjsOperationKind.And);
 			return exp;
 		}
 
@@ -502,13 +503,13 @@ namespace IronTjs.Compiler.Parser
 			while (true)
 			{
 				if (Accept(TokenType.SymbolDoubleEquals) != null)
-					exp = new BinaryExpression(exp, ParseRelationalExpression(), BinaryExpressionType.Equal);
+					exp = new BinaryExpression(exp, ParseRelationalExpression(), TjsOperationKind.Equal);
 				else if (Accept(TokenType.SymbolExclamationEquals) != null)
-					exp = new BinaryExpression(exp, ParseRelationalExpression(), BinaryExpressionType.NotEqual);
+					exp = new BinaryExpression(exp, ParseRelationalExpression(), TjsOperationKind.NotEqual);
 				else if (Accept(TokenType.SymbolTripleEquals) != null)
-					exp = new BinaryExpression(exp, ParseRelationalExpression(), BinaryExpressionType.StrictEqual);
+					exp = new BinaryExpression(exp, ParseRelationalExpression(), TjsOperationKind.StrictEqual);
 				else if (Accept(TokenType.SymbolExclamationDoubleEquals) != null)
-					exp = new BinaryExpression(exp, ParseRelationalExpression(), BinaryExpressionType.StrictNotEqual);
+					exp = new BinaryExpression(exp, ParseRelationalExpression(), TjsOperationKind.StrictNotEqual);
 				else
 					break;
 			}
@@ -521,13 +522,13 @@ namespace IronTjs.Compiler.Parser
 			while (true)
 			{
 				if (Accept(TokenType.SymbolLessThan) != null)
-					exp = new BinaryExpression(exp, ParseShiftExpression(), BinaryExpressionType.LessThan);
+					exp = new BinaryExpression(exp, ParseShiftExpression(), TjsOperationKind.LessThan);
 				else if (Accept(TokenType.SymbolLessThanEquals) != null)
-					exp = new BinaryExpression(exp, ParseShiftExpression(), BinaryExpressionType.LessThanOrEqual);
+					exp = new BinaryExpression(exp, ParseShiftExpression(), TjsOperationKind.LessThanOrEqual);
 				else if (Accept(TokenType.SymbolGreaterThan) != null)
-					exp = new BinaryExpression(exp, ParseShiftExpression(), BinaryExpressionType.GreaterThan);
+					exp = new BinaryExpression(exp, ParseShiftExpression(), TjsOperationKind.GreaterThan);
 				else if (Accept(TokenType.SymbolGreaterThanEquals) != null)
-					exp = new BinaryExpression(exp, ParseShiftExpression(), BinaryExpressionType.GreaterThanOrEqual);
+					exp = new BinaryExpression(exp, ParseShiftExpression(), TjsOperationKind.GreaterThanOrEqual);
 				else
 					break;
 			}
@@ -540,11 +541,11 @@ namespace IronTjs.Compiler.Parser
 			while (true)
 			{
 				if (Accept(TokenType.SymbolDoubleLessThan) != null)
-					exp = new BinaryExpression(exp, ParseAdditiveExpression(), BinaryExpressionType.LeftShift);
+					exp = new BinaryExpression(exp, ParseAdditiveExpression(), TjsOperationKind.LeftShift);
 				else if (Accept(TokenType.SymbolDoubleGreaterThan) != null)
-					exp = new BinaryExpression(exp, ParseAdditiveExpression(), BinaryExpressionType.ArithmeticRightShift);
+					exp = new BinaryExpression(exp, ParseAdditiveExpression(), TjsOperationKind.RightShiftArithmetic);
 				else if (Accept(TokenType.SymbolTripleGreaterThan) != null)
-					exp = new BinaryExpression(exp, ParseAdditiveExpression(), BinaryExpressionType.LogicalRightShift);
+					exp = new BinaryExpression(exp, ParseAdditiveExpression(), TjsOperationKind.RightShiftLogical);
 				else
 					break;
 			}
@@ -557,9 +558,9 @@ namespace IronTjs.Compiler.Parser
 			while (true)
 			{
 				if (Accept(TokenType.SymbolPlus) != null)
-					exp = new BinaryExpression(exp, ParseMultiplicativeExpression(), BinaryExpressionType.Add);
+					exp = new BinaryExpression(exp, ParseMultiplicativeExpression(), TjsOperationKind.Add);
 				else if (Accept(TokenType.SymbolMinus) != null)
-					exp = new BinaryExpression(exp, ParseMultiplicativeExpression(), BinaryExpressionType.Subtract);
+					exp = new BinaryExpression(exp, ParseMultiplicativeExpression(), TjsOperationKind.Subtract);
 				else
 					break;
 			}
@@ -572,13 +573,13 @@ namespace IronTjs.Compiler.Parser
 			while (true)
 			{
 				if (Accept(TokenType.SymbolAsterisk) != null)
-					exp = new BinaryExpression(exp, ParsePrefixExpression(), BinaryExpressionType.Multiply);
+					exp = new BinaryExpression(exp, ParsePrefixExpression(), TjsOperationKind.Multiply);
 				else if (Accept(TokenType.SymbolSlash) != null)
-					exp = new BinaryExpression(exp, ParsePrefixExpression(), BinaryExpressionType.Divide);
+					exp = new BinaryExpression(exp, ParsePrefixExpression(), TjsOperationKind.Divide);
 				else if (Accept(TokenType.SymbolBackSlash) != null)
-					exp = new BinaryExpression(exp, ParsePrefixExpression(), BinaryExpressionType.FloorDivide);
+					exp = new BinaryExpression(exp, ParsePrefixExpression(), TjsOperationKind.FloorDivide);
 				else if (Accept(TokenType.SymbolPercent) != null)
-					exp = new BinaryExpression(exp, ParsePrefixExpression(), BinaryExpressionType.Modulo);
+					exp = new BinaryExpression(exp, ParsePrefixExpression(), TjsOperationKind.Modulo);
 				else
 					break;
 			}
@@ -588,35 +589,35 @@ namespace IronTjs.Compiler.Parser
 		Expression ParsePrefixExpression()
 		{
 			if (Accept(TokenType.SymbolExclamation) != null)
-				return new UnaryExpression(ParsePrefixExpression(), UnaryExpressionType.Not);
+				return new UnaryExpression(ParsePrefixExpression(), TjsOperationKind.Not);
 			else if (Accept(TokenType.SymbolTilde) != null)
-				return new UnaryExpression(ParsePrefixExpression(), UnaryExpressionType.OnesComplement);
+				return new UnaryExpression(ParsePrefixExpression(), TjsOperationKind.OnesComplement);
 			else if (Accept(TokenType.SymbolNumberSign) != null)
-				return new UnaryExpression(ParsePrefixExpression(), UnaryExpressionType.CharToCharCode);
+				return new UnaryExpression(ParsePrefixExpression(), TjsOperationKind.CharToCharCode);
 			else if (Accept(TokenType.SymbolDollarSign) != null)
-				return new UnaryExpression(ParsePrefixExpression(), UnaryExpressionType.CharCodeToChar);
+				return new UnaryExpression(ParsePrefixExpression(), TjsOperationKind.CharCodeToChar);
 			else if (Accept(TokenType.SymbolPlus) != null)
-				return new UnaryExpression(ParsePrefixExpression(), UnaryExpressionType.UnaryPlus);
+				return new UnaryExpression(ParsePrefixExpression(), TjsOperationKind.UnaryPlus);
 			else if (Accept(TokenType.SymbolMinus) != null)
-				return new UnaryExpression(ParsePrefixExpression(), UnaryExpressionType.Negate);
+				return new UnaryExpression(ParsePrefixExpression(), TjsOperationKind.Negate);
 			else if (Accept(TokenType.SymbolAmpersand) != null)
-				return new UnaryExpression(ParsePrefixExpression(), UnaryExpressionType.ReferProperty);
+				return new UnaryExpression(ParsePrefixExpression(), TjsOperationKind.ReferProperty);
 			else if (Accept(TokenType.SymbolAsterisk) != null)
-				return new UnaryExpression(ParsePrefixExpression(), UnaryExpressionType.DereferProperty);
+				return new UnaryExpression(ParsePrefixExpression(), TjsOperationKind.DereferProperty);
 			else if (Accept(TokenType.SymbolDoublePlus) != null)
-				return new UnaryExpression(ParsePrefixExpression(), UnaryExpressionType.PreIncrementAssign);
+				return new UnaryExpression(ParsePrefixExpression(), TjsOperationKind.PreIncrementAssign);
 			else if (Accept(TokenType.SymbolDoubleMinus) != null)
-				return new UnaryExpression(ParsePrefixExpression(), UnaryExpressionType.PreDecrementAssign);
+				return new UnaryExpression(ParsePrefixExpression(), TjsOperationKind.PreDecrementAssign);
 			else if (Accept(TokenType.KeywordNew) != null)
-				return new UnaryExpression(ParsePrefixExpression(), UnaryExpressionType.New);
+				return new UnaryExpression(ParsePrefixExpression(), TjsOperationKind.New);
 			else if (Accept(TokenType.KeywordInvalidate) != null)
-				return new UnaryExpression(ParsePrefixExpression(), UnaryExpressionType.Invalidate);
+				return new UnaryExpression(ParsePrefixExpression(), TjsOperationKind.Invalidate);
 			else if (Accept(TokenType.KeywordIsValid) != null)
-				return new UnaryExpression(ParsePrefixExpression(), UnaryExpressionType.IsValid);
+				return new UnaryExpression(ParsePrefixExpression(), TjsOperationKind.IsValid);
 			else if (Accept(TokenType.KeywordDelete) != null)
-				return new UnaryExpression(ParsePrefixExpression(), UnaryExpressionType.Delete);
+				return new UnaryExpression(ParsePrefixExpression(), TjsOperationKind.Delete);
 			else if (Accept(TokenType.KeywordTypeOf) != null)
-				return new UnaryExpression(ParsePrefixExpression(), UnaryExpressionType.TypeOf);
+				return new UnaryExpression(ParsePrefixExpression(), TjsOperationKind.TypeOf);
 			else if (Accept(TokenType.KeywordInt) != null)
 				return new ConvertExpression(ParsePrefixExpression(), ConvertType.Integer);
 			else if (Accept(TokenType.KeywordReal) != null)
@@ -631,7 +632,7 @@ namespace IronTjs.Compiler.Parser
 		{
 			var exp = ParseValidationExpression();
 			while (Accept(TokenType.KeywordInstanceOf) != null)
-				exp = new BinaryExpression(exp, ParseValidationExpression(), BinaryExpressionType.InstanceOf);
+				exp = new BinaryExpression(exp, ParseValidationExpression(), TjsOperationKind.InstanceOf);
 			return exp;
 		}
 
@@ -639,7 +640,7 @@ namespace IronTjs.Compiler.Parser
 		{
 			var exp = ParseContextExpression();
 			if (Accept(TokenType.KeywordIsValid) != null)
-				return new UnaryExpression(exp, UnaryExpressionType.IsValid);
+				return new UnaryExpression(exp, TjsOperationKind.IsValid);
 			return exp;
 		}
 
@@ -647,7 +648,7 @@ namespace IronTjs.Compiler.Parser
 		{
 			var exp = ParsePostfixExpression();
 			while (Accept(TokenType.KeywordInContextOf) != null)
-				exp = new BinaryExpression(exp, ParsePostfixExpression(), BinaryExpressionType.InContextOf);
+				exp = new BinaryExpression(exp, ParsePostfixExpression(), TjsOperationKind.InContextOf);
 			return exp;
 		}
 
@@ -657,11 +658,11 @@ namespace IronTjs.Compiler.Parser
 			while (true)
 			{
 				if (Accept(TokenType.SymbolDoublePlus) != null)
-					exp = new UnaryExpression(exp, UnaryExpressionType.PostIncrementAssign);
+					exp = new UnaryExpression(exp, TjsOperationKind.PostIncrementAssign);
 				else if (Accept(TokenType.SymbolDoubleMinus) != null)
-					exp = new UnaryExpression(exp, UnaryExpressionType.PostDecrementAssign);
+					exp = new UnaryExpression(exp, TjsOperationKind.PostDecrementAssign);
 				else if (Accept(TokenType.SymbolExclamation) != null)
-					exp = new UnaryExpression(exp, UnaryExpressionType.Evaluate);
+					exp = new UnaryExpression(exp, TjsOperationKind.Evaluate);
 				else
 					break;
 			}
@@ -733,6 +734,7 @@ namespace IronTjs.Compiler.Parser
 
 		object ParseLiteral()
 		{
+			Token token;
 			if (Accept(TokenType.KeywordTrue) != null)
 				return 1L;
 			else if (Accept(TokenType.KeywordFalse) != null)
@@ -740,9 +742,18 @@ namespace IronTjs.Compiler.Parser
 			else if (Accept(TokenType.KeywordNull) != null)
 				return null;
 			else if (Accept(TokenType.KeywordVoid) != null)
-				return TjsVoid.Value;
+				return IronTjs.Builtins.TjsVoid.Value;
+			else if ((token = Accept(TokenType.LiteralInteger, TokenType.LiteralReal)) != null)
+				return token.Value;
 			else
-				return Expect(TokenType.LiteralInteger, TokenType.KeywordReal, TokenType.KeywordString).Value;
+			{
+				token = Expect(TokenType.LiteralString);
+				StringBuilder sb = new StringBuilder();
+				do
+					sb.Append(token.Value.ToString());
+				while ((token = Accept(TokenType.LiteralString)) != null);
+				return sb.ToString();
+			}
 		}
 	}
 }

@@ -19,7 +19,24 @@ namespace IronTjs.Compiler.Ast
 
 		public ConvertType ToType { get; private set; }
 
-		public override System.Linq.Expressions.Expression TransformRead() { throw new NotImplementedException(); }
+		public override System.Linq.Expressions.Expression TransformRead()
+		{
+			Type type;
+			switch (ToType)
+			{
+				case ConvertType.Integer:
+				default:
+					type = typeof(long);
+					break;
+				case ConvertType.Real:
+					type = typeof(double);
+					break;
+				case ConvertType.String:
+					type = typeof(string);
+					break;
+			}
+			return System.Linq.Expressions.Expression.Convert(IronTjs.Runtime.Binding.Binders.Convert(LanguageContext, Operand.TransformRead(), type), typeof(object));
+		}
 
 		public override System.Linq.Expressions.Expression TransformWrite(System.Linq.Expressions.Expression value) { throw new InvalidOperationException("型変換を左辺値とすることはできません。"); }
 

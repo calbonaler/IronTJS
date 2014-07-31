@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using IronTjs.Builtins;
 using Microsoft.Scripting.Utils;
 
 namespace IronTjs.Compiler.Ast
@@ -14,7 +15,10 @@ namespace IronTjs.Compiler.Ast
 		{
 			Initializers = initializers.ToReadOnly();
 			foreach (var init in Initializers)
-				init.Value.Parent = this;
+			{
+				if (init.Value != null)
+					init.Value.Parent = this;
+			}
 		}
 
 		public ReadOnlyCollection<KeyValuePair<string, Expression>> Initializers { get; private set; }
@@ -31,7 +35,10 @@ namespace IronTjs.Compiler.Ast
 			List<System.Linq.Expressions.Expression> exps = new List<System.Linq.Expressions.Expression>();
 			foreach (var initializer in Initializers)
 			{
-				exp = resolver.DeclareVariable(initializer.Key, initializer.Value.TransformRead());
+				if (initializer.Value != null)
+					exp = resolver.DeclareVariable(initializer.Key, initializer.Value.TransformRead());
+				else
+					exp = resolver.DeclareVariable(initializer.Key, System.Linq.Expressions.Expression.Constant(IronTjs.Builtins.TjsVoid.Value));
 				if (exp == null)
 					throw new InvalidOperationException(string.Format("スコープに変数 \"{0}\" を宣言できません。", initializer.Key));
 				exps.Add(exp);

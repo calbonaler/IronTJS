@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Scripting;
 
-namespace IronTjs.Compiler.Parser
+namespace IronTjs.Compiler
 {
 	public class Token
 	{

@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
-using IronTjs.Compiler.Parser;
+using IronTjs.Compiler;
 using IronTjs.Runtime.Binding;
 using Microsoft.Scripting;
 using Microsoft.Scripting.Runtime;
@@ -36,7 +37,11 @@ namespace IronTjs.Runtime
 
 		public TjsBinder Binder { get; private set; }
 
-		public override UnaryOperationBinder CreateUnaryOperationBinder(System.Linq.Expressions.ExpressionType operation) { return base.CreateUnaryOperationBinder(operation); }
+		public override ConvertBinder CreateConvertBinder(Type toType, bool? explicitCast) { return new TjsConvertBinder(this, toType, explicitCast ?? true); }
+
+		public override InvokeBinder CreateInvokeBinder(CallInfo callInfo) { return new TjsInvokeBinder(this, callInfo); }
+
+		public override UnaryOperationBinder CreateUnaryOperationBinder(System.Linq.Expressions.ExpressionType operation) { return new TjsUnaryOperationBinder(this, operation); }
 
 		public override BinaryOperationBinder CreateBinaryOperationBinder(System.Linq.Expressions.ExpressionType operation) { return new TjsBinaryOperationBinder(this, operation); }
 
@@ -50,6 +55,8 @@ namespace IronTjs.Runtime
 		{
 			if (exception is NotImplementedException)
 				return base.FormatException(exception);
+			if (exception is MissingMemberException)
+				return string.Format("\"{0}\" という名前のオブジェクトは指定されたスコープに存在しません。", exception.Message);
 			return exception.GetType().ToString() + ": " + exception.Message;
 		}
 	}

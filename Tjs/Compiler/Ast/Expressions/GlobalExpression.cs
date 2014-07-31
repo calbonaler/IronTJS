@@ -10,7 +10,10 @@ namespace IronTjs.Compiler.Ast
 	{
 		public override System.Linq.Expressions.Expression TransformRead()
 		{
-			throw new NotImplementedException();
+			Node node = this;
+			while (node.Parent != null)
+				node = node.Parent;
+			return ((SourceUnitTree)node).GlobalObject;
 		}
 
 		public override System.Linq.Expressions.Expression TransformWrite(System.Linq.Expressions.Expression value) { throw new InvalidOperationException("global を左辺値とすることはできません。"); }

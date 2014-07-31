@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.Scripting;
 using Microsoft.Scripting.Runtime;
 
-namespace IronTjs.Compiler.Parser
+namespace IronTjs.Compiler
 {
 	public class Tokenizer : TokenizerService
 	{
@@ -54,10 +54,10 @@ namespace IronTjs.Compiler.Parser
 				}
 			} while (_columnIndex >= _line.Length);
 			var start = CurrentPosition;
-			if (char.IsLetter(_line[_columnIndex]))
+			if (char.IsLetter(_line[_columnIndex]) || _line[_columnIndex] == '_')
 			{
 				StringBuilder sb = new StringBuilder();
-				while (_columnIndex < _line.Length && char.IsLetterOrDigit(_line[_columnIndex]))
+				while (_columnIndex < _line.Length && (char.IsLetterOrDigit(_line[_columnIndex]) || _line[_columnIndex] == '_'))
 					sb.Append(_line[_columnIndex++]);
 				_nextToken = new Token(Token.GetTokenTypeForWord(sb.ToString()), sb.ToString(), new SourceSpan(start, CurrentPosition));
 			}
@@ -66,7 +66,42 @@ namespace IronTjs.Compiler.Parser
 				long value = 0;
 				while (_columnIndex < _line.Length && char.IsDigit(_line[_columnIndex]))
 					value = value * 10 + _line[_columnIndex++] - '0';
-				_nextToken = new Token(TokenType.LiteralInteger, value, new SourceSpan(start, CurrentPosition));
+				long fraction = 0;
+				long divisor = 1;
+				if (_columnIndex < _line.Length && _line[_columnIndex] == '.')
+				{
+					_columnIndex++;
+					while (_columnIndex < _line.Length && char.IsDigit(_line[_columnIndex]))
+					{
+						fraction = fraction * 10 + _line[_columnIndex++] - '0';
+						divisor *= 10;
+					}
+				}
+				if (divisor > 1)
+					_nextToken = new Token(TokenType.LiteralReal, (double)value + (double)fraction / divisor, new SourceSpan(start, CurrentPosition));
+				else
+					_nextToken = new Token(TokenType.LiteralInteger, value, new SourceSpan(start, CurrentPosition));
+			}
+			else if (_line[_columnIndex] == '"' || _line[_columnIndex] == '\'')
+			{
+				var quote = _line[_columnIndex++];
+				StringBuilder sb = new StringBuilder();
+				while (true)
+				{
+					if (_columnIndex >= _line.Length)
+					{
+						ErrorSink.Add(_sourceUnit, "文字列トークンが予期せず終了しました。", new SourceSpan(start, CurrentPosition), -1, Severity.Error);
+						_nextToken = new Token(TokenType.Unknown, sb.ToString(), new SourceSpan(start, CurrentPosition));
+						break;
+					}
+					else if (_line[_columnIndex] == quote)
+					{
+						_columnIndex++;
+						_nextToken = new Token(TokenType.LiteralString, sb.ToString(), new SourceSpan(start, CurrentPosition));
+						break;
+					}
+					sb.Append(_line[_columnIndex++]);
+				}
 			}
 			else
 			{

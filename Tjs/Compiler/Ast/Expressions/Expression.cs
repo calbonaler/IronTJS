@@ -12,7 +12,7 @@ namespace IronTjs.Compiler.Ast
 		public abstract System.Linq.Expressions.Expression TransformRead();
 
 		// Type: typeof(bool)
-		public System.Linq.Expressions.Expression TransformReadAsBoolean() { return null; }
+		public System.Linq.Expressions.Expression TransformReadAsBoolean() { return Runtime.Binding.Binders.Convert(LanguageContext, TransformRead(), typeof(bool)); }
 
 		// Type: typeof(object)
 		public abstract System.Linq.Expressions.Expression TransformWrite(System.Linq.Expressions.Expression value);

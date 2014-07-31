@@ -33,7 +33,7 @@ namespace IronTjs.Runtime.Binding
 				return target.BindSetMember(new CompatibilitySetMemberBinder(_context, Name, IgnoreCase), args[0]);
 			else
 				return new DynamicMetaObject(
-					System.Linq.Expressions.Expression.Throw(System.Linq.Expressions.Expression.Constant(new MissingMemberException()), typeof(object)),
+					System.Linq.Expressions.Expression.Throw(System.Linq.Expressions.Expression.Constant(new MissingMemberException(Name)), typeof(object)),
 					BindingRestrictions.GetTypeRestriction(target.Expression, target.LimitType).Merge(target.Restrictions));
 		}
 	}

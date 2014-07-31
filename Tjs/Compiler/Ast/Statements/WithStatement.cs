@@ -21,6 +21,8 @@ namespace IronTjs.Compiler.Ast
 
 		public Statement Body { get; private set; }
 
+		public System.Linq.Expressions.ParameterExpression AccessibleVariable { get { return accessibleVariable; } }
+
 		public override System.Linq.Expressions.Expression Transform()
 		{
 			var objExp = ObjectExpression.TransformRead();
