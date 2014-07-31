@@ -20,8 +20,27 @@ namespace IronTjs.Compiler.Ast
 
 		public TjsOperationKind ExpressionType { get; private set; }
 
+		System.Linq.Expressions.Expression TransformDeleteAction()
+		{
+			if (Operand is IdentifierExpression)
+				return System.Linq.Expressions.Expression.Dynamic(LanguageContext.CreateDeleteMemberBinder(((IdentifierExpression)Operand).Identifier, false, true), typeof(object), ThisObject);
+			else if (Operand is DirectMemberAccessExpression)
+			{
+				var dma = (DirectMemberAccessExpression)Operand;
+				return System.Linq.Expressions.Expression.Dynamic(LanguageContext.CreateDeleteMemberBinder(dma.MemberName, false, true), typeof(object), dma.Target.TransformRead());
+			}
+			else if (Operand is IndirectMemberAccessExpression)
+			{
+				var ima = (IndirectMemberAccessExpression)Operand;
+				return System.Linq.Expressions.Expression.Dynamic(LanguageContext.CreateDeleteIndexBinder(new System.Dynamic.CallInfo(2)), typeof(object), ima.Target.TransformRead(), ima.Member.TransformRead());
+			}
+			throw new InvalidOperationException(string.Format("式 {0} に対して delete 演算を適用することはできません。", Operand.GetType()));
+		}
+
 		public override System.Linq.Expressions.Expression TransformRead()
 		{
+			if (ExpressionType == TjsOperationKind.Delete)
+				return TransformDeleteAction();
 			var target = Operand.TransformRead();
 			System.Linq.Expressions.ParameterExpression v = null;
 			if ((ExpressionType & TjsOperationKind.PostAssign) != TjsOperationKind.None)
@@ -53,6 +72,8 @@ namespace IronTjs.Compiler.Ast
 
 		public override System.Linq.Expressions.Expression TransformVoid()
 		{
+			if (ExpressionType == TjsOperationKind.Delete)
+				return Microsoft.Scripting.Ast.Utils.Void(TransformDeleteAction());
 			switch (ExpressionType)
 			{
 				case TjsOperationKind.CharCodeToChar:

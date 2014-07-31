@@ -50,6 +50,18 @@ namespace IronTjs.Runtime
 		public override SetMemberBinder CreateSetMemberBinder(string name, bool ignoreCase) { return new CompatibilitySetMemberBinder(this, name, ignoreCase); }
 
 		internal TjsSetMemberBinder CreateSetMemberBinder(string name, bool ignoreCase, bool forceCreate) { return new TjsSetMemberBinder(this, name, ignoreCase, forceCreate); }
+		
+		public override DeleteMemberBinder CreateDeleteMemberBinder(string name, bool ignoreCase) { return new CompatibilityDeleteMemberBinder(this, name, ignoreCase); }
+
+		public DynamicMetaObjectBinder CreateDeleteMemberBinder(string name, bool ignoreCase, bool noThrow)
+		{
+			if (noThrow)
+				return new TjsDeleteMemberBinder(this, name, ignoreCase);
+			else
+				return CreateDeleteMemberBinder(name, ignoreCase);
+		}
+
+		public DynamicMetaObjectBinder CreateDeleteIndexBinder(CallInfo callInfo) { return new TjsDeleteIndexBinder(this, callInfo); }
 
 		public override string FormatException(Exception exception)
 		{

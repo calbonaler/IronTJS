@@ -27,6 +27,8 @@ namespace IronTjs.Compiler.Ast
 		System.Linq.Expressions.ParameterExpression context = System.Linq.Expressions.Expression.Parameter(typeof(object), "__this__");
 		System.Linq.Expressions.ParameterExpression parameters = System.Linq.Expressions.Expression.Parameter(typeof(object[]), "__params__");
 
+		public System.Linq.Expressions.ParameterExpression Context { get { return context; } }
+
 		public string Name { get; private set; }
 
 		public ReadOnlyCollection<ParameterDefinition> Parameters { get; private set; }
@@ -38,13 +40,19 @@ namespace IronTjs.Compiler.Ast
 		public System.Linq.Expressions.Expression ResolveForRead(string name)
 		{
 			var param = Parameters.Select(x => x.ParameterVariable).FirstOrDefault(x => x != null && x.Name == name);
-			return param != null || variables.TryGetValue(name, out param) ? param : null;
+			if (param != null || variables.TryGetValue(name, out param))
+				return param;
+			else
+				return System.Linq.Expressions.Expression.Dynamic(LanguageContext.CreateGetMemberBinder(name, false), typeof(object), context);
 		}
 
 		public System.Linq.Expressions.Expression ResolveForWrite(string name, System.Linq.Expressions.Expression value)
 		{
 			var param = Parameters.Select(x => x.ParameterVariable).FirstOrDefault(x => x != null && x.Name == name);
-			return param != null || variables.TryGetValue(name, out param) ? System.Linq.Expressions.Expression.Assign(param, value) : null;
+			if (param != null || variables.TryGetValue(name, out param))
+				return System.Linq.Expressions.Expression.Assign(param, value);
+			else
+				return System.Linq.Expressions.Expression.Dynamic(LanguageContext.CreateSetMemberBinder(name, false, false), typeof(object), context, value);
 		}
 
 		public System.Linq.Expressions.Expression DeclareVariable(string name, System.Linq.Expressions.Expression value)

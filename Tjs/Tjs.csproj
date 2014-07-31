@@ -91,6 +91,8 @@
     <Compile Include="Runtime\Binding\TjsBinaryOperationBinder.cs" />
     <Compile Include="Runtime\Binding\TjsBinder.cs" />
     <Compile Include="Runtime\Binding\TjsConvertBinder.cs" />
+    <Compile Include="Runtime\Binding\TjsDeleteIndexBinder.cs" />
+    <Compile Include="Runtime\Binding\TjsDeleteMemberBinder.cs" />
     <Compile Include="Runtime\Binding\TjsGetMemberBinder.cs" />
     <Compile Include="Runtime\Binding\TjsInvokeBinder.cs" />
     <Compile Include="Runtime\Binding\TjsOperationKind.cs" />
