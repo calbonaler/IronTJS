@@ -66,8 +66,8 @@ namespace IronTjs.Compiler.Ast
 				case TjsOperationKind.Modulo:
 				case TjsOperationKind.Multiply:
 				case TjsOperationKind.NotEqual:
-				case TjsOperationKind.StrictEqual:
-				case TjsOperationKind.StrictNotEqual:
+				case TjsOperationKind.DistinctEqual:
+				case TjsOperationKind.DistinctNotEqual:
 				case TjsOperationKind.Subtract:
 					return System.Linq.Expressions.Expression.Block(Left.TransformVoid(), Right.TransformVoid());
 				case TjsOperationKind.AndAlso:

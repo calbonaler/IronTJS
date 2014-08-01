@@ -508,9 +508,9 @@ namespace IronTjs.Compiler
 				else if (Accept(TokenType.SymbolExclamationEquals) != null)
 					exp = new BinaryExpression(exp, ParseRelationalExpression(), TjsOperationKind.NotEqual);
 				else if (Accept(TokenType.SymbolTripleEquals) != null)
-					exp = new BinaryExpression(exp, ParseRelationalExpression(), TjsOperationKind.StrictEqual);
+					exp = new BinaryExpression(exp, ParseRelationalExpression(), TjsOperationKind.DistinctEqual);
 				else if (Accept(TokenType.SymbolExclamationDoubleEquals) != null)
-					exp = new BinaryExpression(exp, ParseRelationalExpression(), TjsOperationKind.StrictNotEqual);
+					exp = new BinaryExpression(exp, ParseRelationalExpression(), TjsOperationKind.DistinctNotEqual);
 				else
 					break;
 			}

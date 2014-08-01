@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -66,17 +67,14 @@ namespace IronTjs.Compiler.Ast
 
 		public override System.Linq.Expressions.Expression TransformRead()
 		{
-			throw new NotImplementedException();
+			return System.Linq.Expressions.Expression.Dynamic(LanguageContext.CreateGetIndexBinder(new CallInfo(2)), typeof(object), Target.TransformRead(), Member.TransformRead());
 		}
 
 		public override System.Linq.Expressions.Expression TransformWrite(System.Linq.Expressions.Expression value)
 		{
-			throw new NotImplementedException();
+			return System.Linq.Expressions.Expression.Dynamic(LanguageContext.CreateSetIndexBinder(new CallInfo(3)), typeof(object), Target.TransformRead(), Member.TransformRead(), value);
 		}
 
-		public override System.Linq.Expressions.Expression TransformVoid()
-		{
-			throw new NotImplementedException();
-		}
+		public override System.Linq.Expressions.Expression TransformVoid() { return System.Linq.Expressions.Expression.Empty(); }
 	}
 }

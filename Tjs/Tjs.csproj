@@ -93,10 +93,12 @@
     <Compile Include="Runtime\Binding\TjsConvertBinder.cs" />
     <Compile Include="Runtime\Binding\TjsDeleteIndexBinder.cs" />
     <Compile Include="Runtime\Binding\TjsDeleteMemberBinder.cs" />
+    <Compile Include="Runtime\Binding\TjsGetIndexBinder.cs" />
     <Compile Include="Runtime\Binding\TjsGetMemberBinder.cs" />
     <Compile Include="Runtime\Binding\TjsInvokeBinder.cs" />
     <Compile Include="Runtime\Binding\TjsOperationKind.cs" />
     <Compile Include="Runtime\Binding\TjsOverloadResolver.cs" />
+    <Compile Include="Runtime\Binding\TjsSetIndexBinder.cs" />
     <Compile Include="Runtime\Binding\TjsSetMemberBinder.cs" />
     <Compile Include="Runtime\Binding\TjsUnaryOperationBinder.cs" />
     <Compile Include="Runtime\TjsContext.cs" />

@@ -61,6 +61,10 @@ namespace IronTjs.Runtime
 				return CreateDeleteMemberBinder(name, ignoreCase);
 		}
 
+		public GetIndexBinder CreateGetIndexBinder(CallInfo callInfo) { return new TjsGetIndexBinder(this, callInfo); }
+
+		public SetIndexBinder CreateSetIndexBinder(CallInfo callInfo) { return new TjsSetIndexBinder(this, callInfo); }
+
 		public DynamicMetaObjectBinder CreateDeleteIndexBinder(CallInfo callInfo) { return new TjsDeleteIndexBinder(this, callInfo); }
 
 #if !DEBUG

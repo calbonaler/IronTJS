@@ -51,8 +51,8 @@ namespace IronTjs.Runtime.Binding
 		LessThanOrEqual,
 		Equal,
 		NotEqual,
-		StrictEqual,
-		StrictNotEqual,
+		DistinctEqual,
+		DistinctNotEqual,
 		
 		// Binary (Special)
 		Exchange,
