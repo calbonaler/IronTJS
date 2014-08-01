@@ -63,6 +63,7 @@ namespace IronTjs.Runtime
 
 		public DynamicMetaObjectBinder CreateDeleteIndexBinder(CallInfo callInfo) { return new TjsDeleteIndexBinder(this, callInfo); }
 
+#if !DEBUG
 		public override string FormatException(Exception exception)
 		{
 			if (exception is NotImplementedException)
@@ -71,5 +72,6 @@ namespace IronTjs.Runtime
 				return string.Format("\"{0}\" という名前のオブジェクトは指定されたスコープに存在しません。", exception.Message);
 			return exception.GetType().ToString() + ": " + exception.Message;
 		}
+#endif
 	}
 }

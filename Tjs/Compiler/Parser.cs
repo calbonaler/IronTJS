@@ -146,10 +146,11 @@ namespace IronTjs.Compiler
 			{
 				while (true)
 				{
-					if (Accept(TokenType.SymbolAsterisk) != null)
-						parameters.Add(new ParameterDefinition(null, true));
-					else if (Accept(TokenType.SymbolCloseParenthesis) != null)
+					var token = Accept(TokenType.SymbolCloseParenthesis, TokenType.SymbolComma);
+					if (token != null && token.Type == TokenType.SymbolCloseParenthesis)
 						break;
+					else if (Accept(TokenType.SymbolAsterisk) != null)
+						parameters.Add(new ParameterDefinition(null, true));
 					else
 					{
 						var paramName = Expect(TokenType.Identifier).Value.ToString();

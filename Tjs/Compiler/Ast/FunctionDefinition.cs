@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Scripting.Utils;
+using MSAst = System.Linq.Expressions;
 
 namespace IronTjs.Compiler.Ast
 {
@@ -71,6 +72,43 @@ namespace IronTjs.Compiler.Ast
 		//     object pn = ...;
 		//     (..Body..)
 		// }
+
+		System.Linq.Expressions.Expression<Func<object, object[], object>> TransformLambda()
+		{
+			List<MSAst.Expression> body = new List<MSAst.Expression>();
+			for (int i = 0; i < Parameters.Count; i++)
+			{
+				MSAst.Expression exp = MSAst.Expression.ArrayAccess(parameters, MSAst.Expression.Constant(i));
+				if (Parameters[i].HasDefaultValue)
+					exp = MSAst.Expression.Condition(MSAst.Expression.TypeEqual(exp, typeof(IronTjs.Builtins.TjsVoid)),
+						MSAst.Expression.Constant(Parameters[i].DefaultValue, typeof(object)),
+						exp
+					);
+				body.Add(MSAst.Expression.Assign(Parameters[i].ParameterVariable,
+					MSAst.Expression.Condition(MSAst.Expression.LessThan(MSAst.Expression.Constant(i), MSAst.Expression.Property(parameters, "Length")),
+						exp,
+						MSAst.Expression.Constant(Parameters[i].HasDefaultValue ? Parameters[i].DefaultValue : IronTjs.Builtins.TjsVoid.Value, typeof(object))
+					)
+				));
+			}
+			foreach (var statement in Body)
+			{
+				body.Add(statement.Transform());
+			}
+			body.Add(MSAst.Expression.Label(ReturnLabel, MSAst.Expression.Constant(IronTjs.Builtins.TjsVoid.Value)));
+			return MSAst.Expression.Lambda<Func<object, object[], object>>(MSAst.Expression.Block(variables.Values.Concat(Parameters.Select(x => x.ParameterVariable)), body), Name, new[] { context, parameters });
+		}
+
+		public System.Linq.Expressions.Expression Register(System.Linq.Expressions.Expression registeredTo)
+		{
+			var lambda = TransformLambda();
+			return MSAst.Expression.Dynamic(LanguageContext.CreateSetMemberBinder(Name, false, true), typeof(object), registeredTo,
+				MSAst.Expression.New(typeof(IronTjs.Runtime.TjsFunction).GetConstructor(new[] { typeof(Func<object, object[], object>), typeof(object) }),
+					lambda,
+					registeredTo
+				)
+			);
+		}
 	}
 
 	public class ParameterDefinition : Node

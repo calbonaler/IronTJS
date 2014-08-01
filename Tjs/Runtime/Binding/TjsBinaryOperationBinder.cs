@@ -26,7 +26,7 @@ namespace IronTjs.Runtime.Binding
 			{
 				case ExpressionType.Add:
 					if (target.LimitType == typeof(string) || arg.LimitType == typeof(string))
-						res = Expression.Call(new Func<object, object, string>(string.Concat).Method, target.Expression, arg.Expression);
+						res = Expression.Call(new Func<string, string, string>(string.Concat).Method, _context.Convert(left, typeof(string)), _context.Convert(right, typeof(string)));
 					else if (Binders.IsReal(target.LimitType) || Binders.IsReal(arg.LimitType))
 						res = Expression.Add(_context.Convert(left, typeof(double)), _context.Convert(right, typeof(double)));
 					else
