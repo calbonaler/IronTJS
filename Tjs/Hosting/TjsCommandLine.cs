@@ -4,12 +4,24 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Scripting;
+using Microsoft.Scripting.Hosting;
 using Microsoft.Scripting.Hosting.Shell;
 
 namespace IronTjs.Hosting
 {
 	public class TjsCommandLine : CommandLine
 	{
+		public TjsCommandLine(Action<ScriptScope> scopeInitializer) { _scopeInitializer = scopeInitializer; }
+
+		Action<ScriptScope> _scopeInitializer;
+
+		protected override int Run()
+		{
+			ScriptScope = Engine.CreateScope();
+			_scopeInitializer(ScriptScope);
+			return base.Run();
+		}
+
 		protected override void ExecuteCommand(string command)
 		{
 			var result = ExecuteCommand(Engine.CreateScriptSourceFromString(command, SourceCodeKind.InteractiveCode));
