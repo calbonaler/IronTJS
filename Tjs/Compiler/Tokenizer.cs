@@ -63,22 +63,72 @@ namespace IronTjs.Compiler
 			}
 			else if (char.IsDigit(_line[_columnIndex]))
 			{
+				int baseN = 10;
 				long value = 0;
-				while (_columnIndex < _line.Length && char.IsDigit(_line[_columnIndex]))
-					value = value * 10 + _line[_columnIndex++] - '0';
+				if (_line[_columnIndex] == '0')
+				{
+					_columnIndex++;
+					if (_columnIndex < _line.Length)
+					{
+						if (_line[_columnIndex] == 'x' || _line[_columnIndex] == 'X')
+						{
+							_columnIndex++;
+							baseN = 16;
+						}
+						else if (_line[_columnIndex] == 'b' || _line[_columnIndex] == 'B')
+						{
+							_columnIndex++;
+							baseN = 2;
+						}
+						else if (IsBaseNDigit(_line[_columnIndex], 8))
+							baseN = 8;
+					}
+				}
+				while (_columnIndex < _line.Length && IsBaseNDigit(_line[_columnIndex], baseN))
+					value = value * baseN + ConvertBaseNDigit(_line[_columnIndex++]);
 				long fraction = 0;
 				long divisor = 1;
 				if (_columnIndex < _line.Length && _line[_columnIndex] == '.')
 				{
 					_columnIndex++;
-					while (_columnIndex < _line.Length && char.IsDigit(_line[_columnIndex]))
+					while (_columnIndex < _line.Length && IsBaseNDigit(_line[_columnIndex], baseN))
 					{
-						fraction = fraction * 10 + _line[_columnIndex++] - '0';
-						divisor *= 10;
+						fraction = fraction * baseN + ConvertBaseNDigit(_line[_columnIndex++]);
+						divisor *= baseN;
 					}
 				}
-				if (divisor > 1)
-					_nextToken = new Token(TokenType.LiteralReal, (double)value + (double)fraction / divisor, new SourceSpan(start, CurrentPosition));
+				long exponent = 0;
+				long expBase = 0;
+				if (_columnIndex < _line.Length)
+				{
+					if (_line[_columnIndex] == 'e' || _line[_columnIndex] == 'E')
+					{
+						_columnIndex++;
+						expBase = 10;
+					}
+					else if (_line[_columnIndex] == 'p' || _line[_columnIndex] == 'P')
+					{
+						_columnIndex++;
+						expBase = 2;
+					}
+					if (expBase != 0)
+					{
+						bool negative = false;
+						if (_columnIndex < _line.Length && _line[_columnIndex] == '+')
+							_columnIndex++;
+						else if (_columnIndex < _line.Length && _line[_columnIndex] == '-')
+						{
+							_columnIndex++;
+							negative = true;
+						}
+						while (_columnIndex < _line.Length && IsBaseNDigit(_line[_columnIndex], baseN))
+							exponent = exponent * baseN + ConvertBaseNDigit(_line[_columnIndex++]);
+						if (negative)
+							exponent = -exponent;
+					}
+				}
+				if (divisor > 1 || expBase != 0)
+					_nextToken = new Token(TokenType.LiteralReal, ((double)value + (double)fraction / divisor) * Math.Pow(expBase, exponent), new SourceSpan(start, CurrentPosition));
 				else
 					_nextToken = new Token(TokenType.LiteralInteger, value, new SourceSpan(start, CurrentPosition));
 			}
@@ -100,7 +150,47 @@ namespace IronTjs.Compiler
 						_nextToken = new Token(TokenType.LiteralString, sb.ToString(), new SourceSpan(start, CurrentPosition));
 						break;
 					}
-					sb.Append(_line[_columnIndex++]);
+					var ch = _line[_columnIndex++];
+					if (_columnIndex < _line.Length && ch == '\\')
+					{
+						ch = _line[_columnIndex++];
+						switch (ch)
+						{
+							case 'a':
+								sb.Append('\a');
+								break;
+							case 'b':
+								sb.Append('\b');
+								break;
+							case 'f':
+								sb.Append('\f');
+								break;
+							case 'n':
+								sb.Append('\n');
+								break;
+							case 'r':
+								sb.Append('\r');
+								break;
+							case 't':
+								sb.Append('\t');
+								break;
+							case 'v':
+								sb.Append('\v');
+								break;
+							case 'x':
+							case 'X':
+								int charCode = 0;
+								while (_columnIndex < _line.Length && charCode <= 0x0FFF && IsBaseNDigit(_line[_columnIndex], 16))
+									charCode = charCode * 16 + ConvertBaseNDigit(_line[_columnIndex++]);
+								sb.Append((char)charCode);
+								break;
+							default:
+								sb.Append(ch);
+								break;
+						}
+					}
+					else
+						sb.Append(ch);
 				}
 			}
 			else
@@ -139,5 +229,22 @@ namespace IronTjs.Compiler
 		public override bool IsRestartable { get { return true; } }
 
 		public override TokenInfo ReadToken() { return Read().ToTokenInfo(); }
+
+		bool IsBaseNDigit(char ch, int baseN)
+		{
+			if (baseN <= 10)
+				return ch >= '0' && ch <= '0' + baseN - 1;
+			else
+				return ch >= '0' && ch <= '9' || ch >= 'a' && ch <= 'a' + baseN - 10 - 1 || ch >= 'A' && ch <= 'A' + baseN - 10 - 1;
+		}
+
+		int ConvertBaseNDigit(char ch)
+		{
+			if (ch >= 'a')
+				return ch - 'a' + 10;
+			if (ch >= 'A')
+				return ch - 'A' + 10;
+			return ch - '0';
+		}
 	}
 }
