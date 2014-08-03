@@ -17,7 +17,7 @@ namespace IronTjs.Runtime.Binding
 
 		public override DynamicMetaObject FallbackSetIndex(DynamicMetaObject target, DynamicMetaObject[] indexes, DynamicMetaObject value, DynamicMetaObject errorSuggestion)
 		{
-			var arguments = ArrayUtils.Append(ArrayUtils.Insert(target, indexes));
+			var arguments = ArrayUtils.Append(ArrayUtils.Insert(target, indexes), value);
 			var result = _context.Binder.SetIndex(new TjsOverloadResolverFactory(_context.Binder), arguments);
 			if (result != null)
 			{
@@ -28,12 +28,14 @@ namespace IronTjs.Runtime.Binding
 			}
 			if (indexes[0].LimitType == typeof(string))
 			{
-				result = target.BindSetMember(new CompatibilitySetMemberBinder(_context, (string)indexes[0].Value, false), value);
-				return new DynamicMetaObject(result.Expression, result.Restrictions.Merge(
-					BindingRestrictions.GetInstanceRestriction(indexes[0].Expression, indexes[0].Value)
-				).Merge(
-					BindingRestrictions.GetTypeRestriction(indexes[0].Expression, indexes[0].LimitType)
-				));
+				return new DynamicMetaObject(
+					Expression.Dynamic(new TjsSetMemberBinder(_context, (string)indexes[0].Value, false, true), ReturnType, target.Expression, value.Expression),
+					BindingRestrictions.Combine(arguments).Merge(
+						BindingRestrictions.GetInstanceRestriction(indexes[0].Expression, indexes[0].Value)
+					).Merge(
+						BindingRestrictions.GetTypeRestriction(indexes[0].Expression, indexes[0].LimitType)
+					)
+				);
 			}
 			return errorSuggestion ?? new DynamicMetaObject(
 				Expression.Throw(Expression.Constant(new MissingMemberException(indexes[0].Value.ToString())), typeof(object)),

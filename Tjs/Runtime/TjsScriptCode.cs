@@ -35,6 +35,12 @@ namespace IronTjs.Runtime
 			}
 		}
 
-		public override object Run(Scope scope) { return Target(scope); }
+		public override object Run(Scope scope)
+		{
+			var extension = (TjsScopeExtension)scope.GetExtension(LanguageContext.ContextId);
+			if (extension == null)
+				scope.SetExtension(LanguageContext.ContextId, extension = new TjsScopeExtension(scope));
+			return Target(extension.GlobalObject);
+		}
 	}
 }

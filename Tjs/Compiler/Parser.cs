@@ -189,6 +189,7 @@ namespace IronTjs.Compiler
 				if (Accept(TokenType.KeywordGetter) != null)
 					getter = ParsePropertyGetter();
 			}
+			Expect(TokenType.SymbolCloseBrace);
 			return new PropertyDefinition(name, getter, setter);
 		}
 

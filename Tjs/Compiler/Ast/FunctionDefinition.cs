@@ -73,7 +73,7 @@ namespace IronTjs.Compiler.Ast
 		//     (..Body..)
 		// }
 
-		System.Linq.Expressions.Expression<Func<object, object[], object>> TransformLambda()
+		public System.Linq.Expressions.Expression<Func<object, object[], object>> TransformLambda()
 		{
 			List<MSAst.Expression> body = new List<MSAst.Expression>();
 			for (int i = 0; i < Parameters.Count; i++)

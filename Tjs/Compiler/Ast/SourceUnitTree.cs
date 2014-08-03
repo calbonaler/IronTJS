@@ -50,8 +50,10 @@ namespace IronTjs.Compiler.Ast
 			if (signature.Length == 2 && signature[0] == typeof(object) && ((hasResult = signature[1] == typeof(object)) || signature[1] == typeof(void)))
 			{
 				List<System.Linq.Expressions.Expression> exps = new List<System.Linq.Expressions.Expression>();
-				for (int i = 0; i < Functions.Count; i++)
-					exps.Add(Functions[i].Register(GlobalObject));
+				foreach (var func in Functions)
+					exps.Add(func.Register(GlobalObject));
+				foreach (var prop in Properties)
+					exps.Add(prop.Register(GlobalObject));
 				for (int i = 0; i < Statements.Count - 1; i++)
 					exps.Add(Statements[i].Transform());
 				if (Statements.Count > 0)

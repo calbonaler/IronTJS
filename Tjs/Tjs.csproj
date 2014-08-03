@@ -103,7 +103,10 @@
     <Compile Include="Runtime\Binding\TjsUnaryOperationBinder.cs" />
     <Compile Include="Runtime\TjsContext.cs" />
     <Compile Include="Runtime\TjsFunction.cs" />
+    <Compile Include="Runtime\TjsProperty.cs" />
+    <Compile Include="Runtime\TjsScopeExtension.cs" />
     <Compile Include="Runtime\TjsScriptCode.cs" />
+    <Compile Include="Runtime\TjsStorage.cs" />
     <Compile Include="Utils.cs" />
   </ItemGroup>
   <ItemGroup />

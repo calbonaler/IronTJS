@@ -43,12 +43,14 @@ namespace IronTjs.Runtime.Binding
 		{
 			if (indexes[0].LimitType == typeof(string))
 			{
-				var result = target.BindDeleteMember(new CompatibilityDeleteMemberBinder(_context, (string)indexes[0].Value, false));
-				return new DynamicMetaObject(result.Expression, result.Restrictions.Merge(
-					BindingRestrictions.GetInstanceRestriction(indexes[0].Expression, indexes[0].Value)
-				).Merge(
-					BindingRestrictions.GetTypeRestriction(indexes[0].Expression, indexes[0].LimitType)
-				));
+				return new DynamicMetaObject(
+					Expression.Dynamic(new TjsDeleteMemberBinder(_context, (string)indexes[0].Value, false), ReturnType, target.Expression),
+					BindingRestrictions.Combine(ArrayUtils.Insert(target, indexes)).Merge(
+						BindingRestrictions.GetInstanceRestriction(indexes[0].Expression, indexes[0].Value)
+					).Merge(
+						BindingRestrictions.GetTypeRestriction(indexes[0].Expression, indexes[0].LimitType)
+					)
+				);
 			}
 			return errorSuggestion ?? new DynamicMetaObject(
 				Expression.Throw(Expression.Constant(new MissingMemberException(indexes[0].Value.ToString())), typeof(object)),

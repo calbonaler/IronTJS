@@ -47,9 +47,9 @@ namespace IronTjs.Runtime
 
 		public override GetMemberBinder CreateGetMemberBinder(string name, bool ignoreCase) { return new TjsGetMemberBinder(this, name, ignoreCase); }
 
-		public override SetMemberBinder CreateSetMemberBinder(string name, bool ignoreCase) { return new CompatibilitySetMemberBinder(this, name, ignoreCase); }
+		public override SetMemberBinder CreateSetMemberBinder(string name, bool ignoreCase) { return CreateSetMemberBinder(name, ignoreCase, true); }
 
-		internal TjsSetMemberBinder CreateSetMemberBinder(string name, bool ignoreCase, bool forceCreate) { return new TjsSetMemberBinder(this, name, ignoreCase, forceCreate); }
+		public SetMemberBinder CreateSetMemberBinder(string name, bool ignoreCase, bool forceCreate) { return new TjsSetMemberBinder(this, name, ignoreCase, forceCreate); }
 		
 		public override DeleteMemberBinder CreateDeleteMemberBinder(string name, bool ignoreCase) { return new CompatibilityDeleteMemberBinder(this, name, ignoreCase); }
 
