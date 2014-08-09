@@ -140,7 +140,7 @@ namespace IronTjs.Compiler
 				{
 					if (_columnIndex >= _line.Length)
 					{
-						ErrorSink.Add(_sourceUnit, "文字列トークンが予期せず終了しました。", new SourceSpan(start, CurrentPosition), -1, Severity.Error);
+						AddError("文字列トークンが予期せず終了しました。", new SourceSpan(start, CurrentPosition), -1, Severity.Error);
 						_nextToken = new Token(TokenType.Unknown, sb.ToString(), new SourceSpan(start, CurrentPosition));
 						break;
 					}
@@ -245,6 +245,14 @@ namespace IronTjs.Compiler
 			if (ch >= 'A')
 				return ch - 'A' + 10;
 			return ch - '0';
+		}
+
+		void AddError(string message, SourceSpan span, int errorCode, Severity severity)
+		{
+			if (_sourceUnit != null)
+				ErrorSink.Add(_sourceUnit, message, span, errorCode, severity);
+			else
+				ErrorSink.Add(message, null, null, _line, span, errorCode, severity);
 		}
 	}
 }

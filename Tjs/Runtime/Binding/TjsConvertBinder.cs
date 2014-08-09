@@ -54,8 +54,23 @@ namespace IronTjs.Runtime.Binding
 					return InSuccess(NewNullableOrThrough(Expression.Convert(expression, nonNullable), toType, nonNullable), succeeded);
 				else if (expression.Type == typeof(string))
 				{
-					var v = Expression.Variable(nonNullable);
-					Expression test = Expression.Call(nonNullable.GetMethod("TryParse", new[] { typeof(string), nonNullable.MakeByRefType() }), expression, v);
+					ParameterExpression v;
+					Expression test;
+					if (Binders.IsInteger(nonNullable))
+					{
+						v = Expression.Variable(typeof(long));
+						test = Expression.Call(typeof(Binders).GetMethod("TryConvertInt64"), expression, v);
+					}
+					else if (Binders.IsFloatingPoint(nonNullable))
+					{
+						v = Expression.Variable(typeof(double));
+						test = Expression.Call(typeof(Binders).GetMethod("TryConvertDouble"), expression, v);
+					}
+					else
+					{
+						v = Expression.Variable(nonNullable);
+						test = Expression.Call(nonNullable.GetMethod("TryParse", new[] { typeof(string), nonNullable.MakeByRefType() }), expression, v);
+					}
 					if (succeeded != null)
 						test = Expression.Assign(succeeded, test);
 					return Expression.Block(new[] { v },

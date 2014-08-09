@@ -27,7 +27,7 @@ namespace IronTjs.Runtime.Binding
 				case ExpressionType.Add:
 					if (target.LimitType == typeof(string) || arg.LimitType == typeof(string))
 						res = Expression.Call(new Func<string, string, string>(string.Concat).Method, _context.Convert(left, typeof(string)), _context.Convert(right, typeof(string)));
-					else if (Binders.IsReal(target.LimitType) || Binders.IsReal(arg.LimitType))
+					else if (Binders.IsFloatingPoint(target.LimitType) || Binders.IsFloatingPoint(arg.LimitType))
 						res = Expression.Add(_context.Convert(left, typeof(double)), _context.Convert(right, typeof(double)));
 					else
 						res = Expression.Add(_context.Convert(left, typeof(long)), _context.Convert(right, typeof(long)));
@@ -49,7 +49,7 @@ namespace IronTjs.Runtime.Binding
 						Expression exp;
 						if (target.LimitType == typeof(string) && arg.LimitType == typeof(string))
 							exp = Expression.GreaterThan(Expression.Call(new Func<string, string, int>(string.CompareOrdinal).Method, left, right), Expression.Constant(0));
-						else if (Binders.IsReal(target.LimitType) || Binders.IsReal(arg.LimitType))
+						else if (Binders.IsFloatingPoint(target.LimitType) || Binders.IsFloatingPoint(arg.LimitType))
 							exp = Expression.GreaterThan(_context.Convert(left, typeof(double)), _context.Convert(right, typeof(double)));
 						else
 							exp = Expression.GreaterThan(_context.Convert(left, typeof(long)), _context.Convert(right, typeof(long)));
@@ -61,7 +61,7 @@ namespace IronTjs.Runtime.Binding
 						Expression exp;
 						if (target.LimitType == typeof(string) && arg.LimitType == typeof(string))
 							exp = Expression.GreaterThanOrEqual(Expression.Call(new Func<string, string, int>(string.CompareOrdinal).Method, left, right), Expression.Constant(0));
-						else if (Binders.IsReal(target.LimitType) || Binders.IsReal(arg.LimitType))
+						else if (Binders.IsFloatingPoint(target.LimitType) || Binders.IsFloatingPoint(arg.LimitType))
 							exp = Expression.GreaterThanOrEqual(_context.Convert(left, typeof(double)), _context.Convert(right, typeof(double)));
 						else
 							exp = Expression.GreaterThanOrEqual(_context.Convert(left, typeof(long)), _context.Convert(right, typeof(long)));
@@ -76,7 +76,7 @@ namespace IronTjs.Runtime.Binding
 						Expression exp;
 						if (target.LimitType == typeof(string) && arg.LimitType == typeof(string))
 							exp = Expression.LessThan(Expression.Call(new Func<string, string, int>(string.CompareOrdinal).Method, left, right), Expression.Constant(0));
-						else if (Binders.IsReal(target.LimitType) || Binders.IsReal(arg.LimitType))
+						else if (Binders.IsFloatingPoint(target.LimitType) || Binders.IsFloatingPoint(arg.LimitType))
 							exp = Expression.LessThan(_context.Convert(left, typeof(double)), _context.Convert(right, typeof(double)));
 						else
 							exp = Expression.LessThan(_context.Convert(left, typeof(long)), _context.Convert(right, typeof(long)));
@@ -88,7 +88,7 @@ namespace IronTjs.Runtime.Binding
 						Expression exp;
 						if (target.LimitType == typeof(string) && arg.LimitType == typeof(string))
 							exp = Expression.LessThanOrEqual(Expression.Call(new Func<string, string, int>(string.CompareOrdinal).Method, left, right), Expression.Constant(0));
-						else if (Binders.IsReal(target.LimitType) || Binders.IsReal(arg.LimitType))
+						else if (Binders.IsFloatingPoint(target.LimitType) || Binders.IsFloatingPoint(arg.LimitType))
 							exp = Expression.LessThanOrEqual(_context.Convert(left, typeof(double)), _context.Convert(right, typeof(double)));
 						else
 							exp = Expression.LessThanOrEqual(_context.Convert(left, typeof(long)), _context.Convert(right, typeof(long)));
@@ -99,7 +99,7 @@ namespace IronTjs.Runtime.Binding
 					res = Expression.Modulo(_context.Convert(left, typeof(long)), _context.Convert(right, typeof(long)));
 					break;
 				case ExpressionType.Multiply:
-					if (Binders.IsReal(target.LimitType) || Binders.IsReal(arg.LimitType))
+					if (Binders.IsFloatingPoint(target.LimitType) || Binders.IsFloatingPoint(arg.LimitType))
 						res = Expression.Multiply(_context.Convert(left, typeof(double)), _context.Convert(right, typeof(double)));
 					else
 						res = Expression.Multiply(_context.Convert(left, typeof(long)), _context.Convert(right, typeof(long)));
@@ -114,7 +114,7 @@ namespace IronTjs.Runtime.Binding
 					res = Expression.RightShift(_context.Convert(left, typeof(long)), _context.Convert(right, typeof(int)));
 					break;
 				case ExpressionType.Subtract:
-					if (Binders.IsReal(target.LimitType) || Binders.IsReal(arg.LimitType))
+					if (Binders.IsFloatingPoint(target.LimitType) || Binders.IsFloatingPoint(arg.LimitType))
 						res = Expression.Subtract(_context.Convert(left, typeof(double)), _context.Convert(right, typeof(double)));
 					else
 						res = Expression.Subtract(_context.Convert(left, typeof(long)), _context.Convert(right, typeof(long)));

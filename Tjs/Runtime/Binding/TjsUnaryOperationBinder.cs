@@ -23,19 +23,19 @@ namespace IronTjs.Runtime.Binding
 			switch (Operation)
 			{
 				case ExpressionType.Decrement:
-					if (Binders.IsReal(target.LimitType))
+					if (Binders.IsFloatingPoint(target.LimitType))
 						res = Expression.Decrement(_context.Convert(arg, typeof(double)));
 					else
 						res = Expression.Decrement(_context.Convert(arg, typeof(long)));
 					break;
 				case ExpressionType.Increment:
-					if (Binders.IsReal(target.LimitType))
+					if (Binders.IsFloatingPoint(target.LimitType))
 						res = Expression.Increment(_context.Convert(arg, typeof(double)));
 					else
 						res = Expression.Increment(_context.Convert(arg, typeof(long)));
 					break;
 				case ExpressionType.Negate:
-					if (Binders.IsReal(target.LimitType))
+					if (Binders.IsFloatingPoint(target.LimitType))
 						res = Expression.Negate(_context.Convert(arg, typeof(double)));
 					else
 						res = Expression.Negate(_context.Convert(arg, typeof(long)));
@@ -47,16 +47,21 @@ namespace IronTjs.Runtime.Binding
 					res = Expression.OnesComplement(_context.Convert(arg, typeof(long)));
 					break;
 				case ExpressionType.UnaryPlus:
-					if (Binders.IsReal(target.LimitType))
+					if (Binders.IsFloatingPoint(target.LimitType))
 						res = _context.Convert(arg, typeof(double));
 					else if (Binders.IsInteger(target.LimitType))
 						res = _context.Convert(arg, typeof(long));
 					else if (target.LimitType == typeof(string))
-						res = _context.Convert(arg, typeof(double));
+						res = Expression.Call(new Func<string, object>(Binders.ConvertNumber).Method, arg);
 					break;
 			}
 			if (res != null)
-				return new DynamicMetaObject(Expression.Convert(res, typeof(object)), restrictions);
+			{
+				if (res.Type != typeof(object))
+					return new DynamicMetaObject(Expression.Convert(res, typeof(object)), restrictions);
+				else
+					return new DynamicMetaObject(res, restrictions);
+			}
 			else
 				return errorSuggestion ?? new DynamicMetaObject(Expression.Throw(Expression.Constant(new InvalidOperationException("不正な単項演算です。")), typeof(object)), restrictions);
 		}

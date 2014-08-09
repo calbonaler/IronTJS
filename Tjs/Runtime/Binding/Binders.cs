@@ -2,10 +2,13 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Dynamic;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+using IronTjs.Compiler;
+using Microsoft.Scripting;
 using Microsoft.Scripting.Actions;
 
 namespace IronTjs.Runtime.Binding
@@ -20,7 +23,7 @@ namespace IronTjs.Runtime.Binding
 				.Concat(callInfo.ArgumentNames.Select(x => new Argument(ArgumentType.Named, x))).ToArray());
 		}
 
-		public static bool IsReal(Type type)
+		public static bool IsFloatingPoint(Type type)
 		{
 			if (type.IsEnum)
 				return false;
@@ -190,6 +193,51 @@ namespace IronTjs.Runtime.Binding
 				throw new NotImplementedException();
 			else
 				return Expression.Dynamic(context.CreateUnaryOperationBinder(type.Value), typeof(object), target);
+		}
+
+		public static bool TryConvertInt64(string s, out long value)
+		{
+			var tokenizer = new Tokenizer();
+			tokenizer.Initialize(null, new StringReader(s), null, SourceLocation.MinValue);
+			if (tokenizer.NextToken.Type == TokenType.LiteralInteger)
+			{
+				value = (long)tokenizer.NextToken.Value;
+				return true;
+			}
+			else if (tokenizer.NextToken.Type == TokenType.LiteralReal)
+			{
+				value = (long)(double)tokenizer.NextToken.Value;
+				return true;
+			}
+			value = 0;
+			return false;
+		}
+
+		public static bool TryConvertDouble(string s, out double value)
+		{
+			var tokenizer = new Tokenizer();
+			tokenizer.Initialize(null, new StringReader(s), null, SourceLocation.MinValue);
+			if (tokenizer.NextToken.Type == TokenType.LiteralInteger)
+			{
+				value = (long)tokenizer.NextToken.Value;
+				return true;
+			}
+			else if (tokenizer.NextToken.Type == TokenType.LiteralReal)
+			{
+				value = (double)tokenizer.NextToken.Value;
+				return true;
+			}
+			value = 0;
+			return false;
+		}
+
+		public static object ConvertNumber(string s)
+		{
+			var tokenizer = new Tokenizer();
+			tokenizer.Initialize(null, new StringReader(s), null, SourceLocation.MinValue);
+			if (tokenizer.NextToken.Type == TokenType.LiteralInteger || tokenizer.NextToken.Type == TokenType.LiteralReal)
+				return tokenizer.NextToken.Value;
+			return 0;
 		}
 	}
 }
