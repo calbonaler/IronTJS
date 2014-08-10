@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Scripting.Utils;
+using IronTjs.Runtime.Binding;
 
 namespace IronTjs.Compiler.Ast
 {
@@ -31,7 +32,6 @@ namespace IronTjs.Compiler.Ast
 
 		public override System.Linq.Expressions.Expression Transform()
 		{
-			// TODO: Language-Dependent Equality Support
 			var transformedExp = Expression.TransformRead();
 			var transformedCases = Cases.Select(x => x.Transform()).ToArray();
 			var hiddenVar = System.Linq.Expressions.Expression.Variable(typeof(object), "__switchVariable__");
@@ -43,9 +43,9 @@ namespace IronTjs.Compiler.Ast
 			{
 				if (transformedCases[i].Item1.Length > 0)
 				{
-					var test = System.Linq.Expressions.Expression.Equal(hiddenVar, transformedCases[i].Item1[0]);
+					var test = LanguageContext.Convert(LanguageContext.DoBinaryOperation(hiddenVar, transformedCases[i].Item1[0], TjsOperationKind.Equal), typeof(bool));
 					for (int j = 1; j < transformedCases[i].Item1.Length; i++)
-						test = System.Linq.Expressions.Expression.OrElse(test, System.Linq.Expressions.Expression.Equal(hiddenVar, transformedCases[i].Item1[i]));
+						test = System.Linq.Expressions.Expression.OrElse(test, LanguageContext.Convert(LanguageContext.DoBinaryOperation(hiddenVar, transformedCases[i].Item1[i], TjsOperationKind.Equal), typeof(bool)));
 					builder.ElseIf(test, System.Linq.Expressions.Expression.Goto(Cases[i].CaseLabel));
 				}
 			}
