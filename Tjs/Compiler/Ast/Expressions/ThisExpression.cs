@@ -12,10 +12,12 @@ namespace IronTjs.Compiler.Ast
 		{
 			for (var node = Parent; node != null; node = node.Parent)
 			{
-				if (node is FunctionDefinition)
-					return ((FunctionDefinition)node).Context;
-				else if (node is SourceUnitTree)
-					return ((SourceUnitTree)node).GlobalObject;
+				FunctionDefinition fd;
+				SourceUnitTree sut;
+				if ((fd = node as FunctionDefinition) != null)
+					return fd.Context;
+				else if ((sut = node as SourceUnitTree) != null)
+					return sut.GlobalObject;
 			}
 			throw Microsoft.Scripting.Utils.Assert.Unreachable;
 		}

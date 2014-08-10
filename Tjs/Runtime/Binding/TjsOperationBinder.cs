@@ -9,7 +9,7 @@ using Microsoft.Scripting.Actions;
 
 namespace IronTjs.Runtime.Binding
 {
-	public class TjsOperationBinder : DynamicMetaObjectBinder
+	class TjsOperationBinder : DynamicMetaObjectBinder
 	{
 		public TjsOperationBinder(TjsContext context, TjsOperationKind operation)
 		{
@@ -127,7 +127,7 @@ namespace IronTjs.Runtime.Binding
 		}
 	}
 
-	class TjsOperationHelper
+	static class TjsOperationHelper
 	{
 		public static long CharToCharCode(string s) { return s.Length > 0 ? s[0] : 0; }
 	}

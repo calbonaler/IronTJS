@@ -199,47 +199,56 @@ namespace IronTjs.Runtime.Binding
 
 		public static bool TryConvertInt64(string s, out long value)
 		{
-			var tokenizer = new Tokenizer();
-			tokenizer.Initialize(null, new StringReader(s), null, SourceLocation.MinValue);
-			if (tokenizer.NextToken.Type == TokenType.LiteralInteger)
+			using (var reader = new StringReader(s))
 			{
-				value = (long)tokenizer.NextToken.Value;
-				return true;
+				var tokenizer = new Tokenizer();
+				tokenizer.Initialize(null, reader, null, SourceLocation.MinValue);
+				if (tokenizer.NextToken.Type == TokenType.LiteralInteger)
+				{
+					value = (long)tokenizer.NextToken.Value;
+					return true;
+				}
+				else if (tokenizer.NextToken.Type == TokenType.LiteralReal)
+				{
+					value = (long)(double)tokenizer.NextToken.Value;
+					return true;
+				}
+				value = 0;
+				return false;
 			}
-			else if (tokenizer.NextToken.Type == TokenType.LiteralReal)
-			{
-				value = (long)(double)tokenizer.NextToken.Value;
-				return true;
-			}
-			value = 0;
-			return false;
 		}
 
 		public static bool TryConvertDouble(string s, out double value)
 		{
-			var tokenizer = new Tokenizer();
-			tokenizer.Initialize(null, new StringReader(s), null, SourceLocation.MinValue);
-			if (tokenizer.NextToken.Type == TokenType.LiteralInteger)
+			using (var reader = new StringReader(s))
 			{
-				value = (long)tokenizer.NextToken.Value;
-				return true;
+				var tokenizer = new Tokenizer();
+				tokenizer.Initialize(null, reader, null, SourceLocation.MinValue);
+				if (tokenizer.NextToken.Type == TokenType.LiteralInteger)
+				{
+					value = (long)tokenizer.NextToken.Value;
+					return true;
+				}
+				else if (tokenizer.NextToken.Type == TokenType.LiteralReal)
+				{
+					value = (double)tokenizer.NextToken.Value;
+					return true;
+				}
+				value = 0;
+				return false;
 			}
-			else if (tokenizer.NextToken.Type == TokenType.LiteralReal)
-			{
-				value = (double)tokenizer.NextToken.Value;
-				return true;
-			}
-			value = 0;
-			return false;
 		}
 
 		public static object ConvertNumber(string s)
 		{
-			var tokenizer = new Tokenizer();
-			tokenizer.Initialize(null, new StringReader(s), null, SourceLocation.MinValue);
-			if (tokenizer.NextToken.Type == TokenType.LiteralInteger || tokenizer.NextToken.Type == TokenType.LiteralReal)
-				return tokenizer.NextToken.Value;
-			return 0;
+			using (var reader = new StringReader(s))
+			{
+				var tokenizer = new Tokenizer();
+				tokenizer.Initialize(null, reader, null, SourceLocation.MinValue);
+				if (tokenizer.NextToken.Type == TokenType.LiteralInteger || tokenizer.NextToken.Type == TokenType.LiteralReal)
+					return tokenizer.NextToken.Value;
+				return 0;
+			}
 		}
 	}
 }

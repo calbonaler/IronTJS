@@ -15,8 +15,6 @@ namespace IronTjs.Compiler.Ast
 			Body.Parent = CatchBlock.Parent = this;
 		}
 
-		System.Linq.Expressions.ParameterExpression catchVariable = System.Linq.Expressions.Expression.Parameter(typeof(Exception));
-
 		public Statement Body { get; private set; }
 
 		public CatchBlock CatchBlock { get; private set; }

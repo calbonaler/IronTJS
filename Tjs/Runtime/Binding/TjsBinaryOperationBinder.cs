@@ -127,7 +127,7 @@ namespace IronTjs.Runtime.Binding
 				return errorSuggestion ?? new DynamicMetaObject(Expression.Throw(Expression.Constant(new InvalidOperationException("不正な二項演算です。")), typeof(object)), restrictions);
 		}
 
-		Expression Equal(Expression left, Expression right)
+		static Expression Equal(Expression left, Expression right)
 		{
 			List<Expression> exps = new List<Expression>();
 			// Variable

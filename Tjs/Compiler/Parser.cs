@@ -14,6 +14,7 @@ namespace IronTjs.Compiler
 {
 	public class Parser
 	{
+		[Serializable]
 		class InternalInvalidSyntaxException : Exception { }
 
 		Tokenizer _tokenizer;

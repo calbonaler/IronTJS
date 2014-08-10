@@ -230,7 +230,7 @@ namespace IronTjs.Compiler
 
 		public override TokenInfo ReadToken() { return Read().ToTokenInfo(); }
 
-		bool IsBaseNDigit(char ch, int baseN)
+		static bool IsBaseNDigit(char ch, int baseN)
 		{
 			if (baseN <= 10)
 				return ch >= '0' && ch <= '0' + baseN - 1;
@@ -238,7 +238,7 @@ namespace IronTjs.Compiler
 				return ch >= '0' && ch <= '9' || ch >= 'a' && ch <= 'a' + baseN - 10 - 1 || ch >= 'A' && ch <= 'A' + baseN - 10 - 1;
 		}
 
-		int ConvertBaseNDigit(char ch)
+		static int ConvertBaseNDigit(char ch)
 		{
 			if (ch >= 'a')
 				return ch - 'a' + 10;
