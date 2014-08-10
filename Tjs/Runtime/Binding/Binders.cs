@@ -44,6 +44,7 @@ namespace IronTjs.Runtime.Binding
 			switch (Type.GetTypeCode(type))
 			{
 				case TypeCode.Byte:
+				case TypeCode.Char:
 				case TypeCode.Int16:
 				case TypeCode.Int32:
 				case TypeCode.Int64:
@@ -64,6 +65,7 @@ namespace IronTjs.Runtime.Binding
 			switch (Type.GetTypeCode(type))
 			{
 				case TypeCode.Byte:
+				case TypeCode.Char:
 				case TypeCode.Decimal:
 				case TypeCode.Double:
 				case TypeCode.Int16:
@@ -180,7 +182,7 @@ namespace IronTjs.Runtime.Binding
 			}
 			var type = GetExpressionTypeForOperation(operation);
 			if (type == null)
-				throw new NotImplementedException();
+				return Expression.Dynamic(context.CreateOperationBinder(operation), typeof(object), left, right);
 			else
 				return Expression.Dynamic(context.CreateBinaryOperationBinder(type.Value), typeof(object), left, right);
 		}
@@ -190,7 +192,7 @@ namespace IronTjs.Runtime.Binding
 			Debug.Assert((operation & TjsOperationKind.ModifierMask) == TjsOperationKind.None);
 			var type = GetExpressionTypeForOperation(operation);
 			if (type == null)
-				throw new NotImplementedException();
+				return Expression.Dynamic(context.CreateOperationBinder(operation), typeof(object), target);
 			else
 				return Expression.Dynamic(context.CreateUnaryOperationBinder(type.Value), typeof(object), target);
 		}

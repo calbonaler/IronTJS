@@ -11,20 +11,20 @@ namespace IronTjs.Runtime.Binding
 		None,
 
 		// Unary
+		AccessPropertyObject,
 		CharCodeToChar,
 		CharToCharCode,
 		Decrement,
 		Delete,
-		DereferProperty,
 		Evaluate,
 		Increment,
 		Invalidate,
+		InvokePropertyHandler,
 		IsValid,
 		Negate,
 		New,
 		Not,
 		OnesComplement,
-		ReferProperty,
 		TypeOf,
 		UnaryPlus,
 		

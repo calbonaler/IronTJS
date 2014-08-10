@@ -603,9 +603,9 @@ namespace IronTjs.Compiler
 			else if (Accept(TokenType.SymbolMinus) != null)
 				return new UnaryExpression(ParsePrefixExpression(), TjsOperationKind.Negate);
 			else if (Accept(TokenType.SymbolAmpersand) != null)
-				return new UnaryExpression(ParsePrefixExpression(), TjsOperationKind.ReferProperty);
+				return new UnaryExpression(ParsePrefixExpression(), TjsOperationKind.AccessPropertyObject);
 			else if (Accept(TokenType.SymbolAsterisk) != null)
-				return new UnaryExpression(ParsePrefixExpression(), TjsOperationKind.DereferProperty);
+				return new UnaryExpression(ParsePrefixExpression(), TjsOperationKind.InvokePropertyHandler);
 			else if (Accept(TokenType.SymbolDoublePlus) != null)
 				return new UnaryExpression(ParsePrefixExpression(), TjsOperationKind.PreIncrementAssign);
 			else if (Accept(TokenType.SymbolDoubleMinus) != null)

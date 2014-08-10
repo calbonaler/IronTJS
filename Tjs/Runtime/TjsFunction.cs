@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace IronTjs.Runtime
 {
-	public class TjsFunction : IDynamicMetaObjectProvider
+	public class TjsFunction : IDynamicMetaObjectProvider, IContextChangeable
 	{
 		public TjsFunction(Func<object, object[], object> functionBody, object context)
 		{
@@ -23,6 +23,8 @@ namespace IronTjs.Runtime
 		public object Invoke(params object[] args) { return _functionBody(Context, args); }
 
 		public TjsFunction ChangeContext(object context) { return new TjsFunction(_functionBody, context); }
+
+		object IContextChangeable.ChangeContext(object context) { return ChangeContext(context); }
 
 		public DynamicMetaObject GetMetaObject(Expression parameter) { return new TjsMetaFunction(parameter, BindingRestrictions.GetTypeRestriction(parameter, typeof(TjsFunction)), this); }
 

@@ -17,6 +17,9 @@ namespace IronTjs.Compiler.Ast
 		// Type: typeof(object)
 		public abstract System.Linq.Expressions.Expression TransformWrite(System.Linq.Expressions.Expression value);
 
+		// Type: typeof(object)
+		public virtual System.Linq.Expressions.Expression TransformDelete() { throw new InvalidOperationException(string.Format("式 {0} に対して delete 演算を適用することはできません。", GetType())); }
+
 		// Type: typeof(void)
 		public abstract System.Linq.Expressions.Expression TransformVoid();
 	}

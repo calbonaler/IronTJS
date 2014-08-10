@@ -23,8 +23,6 @@ namespace IronTjs.Compiler.Ast
 
 		public TjsOperationKind ExpressionType { get; private set; }
 
-		// TODO: Operator Action
-
 		public override System.Linq.Expressions.Expression TransformRead()
 		{
 			if (ExpressionType == TjsOperationKind.Exchange)

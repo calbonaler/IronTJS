@@ -88,33 +88,33 @@ namespace IronTjs.Runtime
 
 			Expression LimitedInstance { get { return Expression.Convert(Expression, LimitType); } }
 
-			DynamicMetaObject Restrict(Expression expression, BindingRestrictions additional)
+			DynamicMetaObject Restrict(Expression expression, DynamicMetaObjectBinder binder, BindingRestrictions additional)
 			{
 				return new DynamicMetaObject(
-					expression,
-					BindingRestrictions.GetInstanceRestriction(LimitedInstance, Value).Merge(
-						BindingRestrictions.GetExpressionRestriction(
-							Expression.Equal(
-								Expression.Field(LimitedInstance, typeof(TjsStorage).GetField("_version", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)),
-								Expression.Constant(Value._version)
-							)
-						)
-					).Merge(additional)
+					Expression.Condition(
+						Expression.Equal(
+							Expression.Field(LimitedInstance, typeof(TjsStorage).GetField("_version", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)),
+							Expression.Constant(Value._version)
+						),
+						expression,
+						binder.GetUpdateExpression(expression.Type)
+					),
+					BindingRestrictions.GetInstanceRestriction(Expression, Value).Merge(additional)
 				);
 			}
 
-			DynamicMetaObject BindDeleteMember(object name, Type returnType, BindingRestrictions additional, Func<DynamicMetaObject> fallback)
+			DynamicMetaObject BindDeleteMember(object name, DynamicMetaObjectBinder binder, BindingRestrictions additional, Func<DynamicMetaObject> fallback)
 			{
 				Expression exp;
 				if (name.GetType() == typeof(string))
 				{
 					var delete = Expression.Call(LimitedInstance, "TryDeleteMember", null, Expression.Constant(name));
-					if (returnType == typeof(void))
+					if (binder.ReturnType == typeof(void))
 						exp = Expression.Condition(delete, Expression.Empty(), fallback().Expression);
-					else if (returnType == typeof(bool))
+					else if (binder.ReturnType == typeof(bool))
 						exp = delete;
 					else
-						exp = Expression.Convert(Expression.Condition(delete, Expression.Constant(1L), Expression.Constant(0L)), returnType);
+						exp = Expression.Convert(Expression.Condition(delete, Expression.Constant(1L), Expression.Constant(0L)), binder.ReturnType);
 				}
 				else
 				{
@@ -122,66 +122,72 @@ namespace IronTjs.Runtime
 					exp = fb.Expression;
 					additional = fb.Restrictions;
 				}
-				return Restrict(exp, additional);
+				return Restrict(exp, binder, additional);
 			}
 
-			DynamicMetaObject BindGetMember(object name, BindingRestrictions additional, Func<DynamicMetaObject> fallback)
+			DynamicMetaObject BindGetMember(object name, DynamicMetaObjectBinder binder, BindingRestrictions additional, Func<DynamicMetaObject> fallback)
 			{
 				Expression exp;
 				if (name.GetType() == typeof(string) && Value.HasMember((string)name))
-					exp = Expression.Call(LimitedInstance, "GetMemberIndirect", null, Expression.Constant(name));
+				{
+					var accessible = binder as IDirectAccessible;
+					exp = Expression.Call(LimitedInstance, accessible != null && accessible.DirectAccess ? "GetMember" : "GetMemberIndirect", null, Expression.Constant(name));
+				}
 				else
 				{
 					var fb = fallback();
 					exp = fb.Expression;
 					additional = fb.Restrictions;
 				}
-				return Restrict(exp, additional);
+				return Restrict(exp, binder, additional);
 			}
 
-			DynamicMetaObject BindSetMember(object name, bool forceCreate, Expression value, BindingRestrictions additional, Func<DynamicMetaObject> fallback)
+			DynamicMetaObject BindSetMember(object name, Expression value, DynamicMetaObjectBinder binder, BindingRestrictions additional, Func<DynamicMetaObject> fallback)
 			{
 				Expression exp;
-				if (name.GetType() == typeof(string) && (forceCreate || Value.HasMember((string)name)))
-					exp = Expression.Call(LimitedInstance, "SetMemberIndirect", null, Expression.Constant(name), value);
+				IForceMemberCreatable creatable = binder as IForceMemberCreatable;
+				if (name.GetType() == typeof(string) && (creatable == null || creatable.ForceCreate || Value.HasMember((string)name)))
+				{
+					var accessible = binder as IDirectAccessible;
+					exp = Expression.Call(LimitedInstance, accessible != null && accessible.DirectAccess ? "SetMember" : "SetMemberIndirect", null, Expression.Constant(name), value);
+				}
 				else
 				{
 					var fb = fallback();
 					exp = fb.Expression;
 					additional = fb.Restrictions;
 				}
-				return Restrict(exp, additional);
+				return Restrict(exp, binder, additional);
 			}
 
 			public override DynamicMetaObject BindDeleteIndex(DeleteIndexBinder binder, DynamicMetaObject[] indexes)
 			{
-				return BindDeleteMember(indexes[0].Value, binder.ReturnType, BindingRestrictions.GetInstanceRestriction(indexes[0].Expression, indexes[0].Value), () => base.BindDeleteIndex(binder, indexes));
+				return BindDeleteMember(indexes[0].Value, binder, BindingRestrictions.GetInstanceRestriction(indexes[0].Expression, indexes[0].Value), () => base.BindDeleteIndex(binder, indexes));
 			}
 
 			public override DynamicMetaObject BindDeleteMember(DeleteMemberBinder binder)
 			{
-				return BindDeleteMember(binder.Name, binder.ReturnType, BindingRestrictions.Empty, () => base.BindDeleteMember(binder));
+				return BindDeleteMember(binder.Name, binder, BindingRestrictions.Empty, () => base.BindDeleteMember(binder));
 			}
 
 			public override DynamicMetaObject BindGetIndex(GetIndexBinder binder, DynamicMetaObject[] indexes)
 			{
-				return BindGetMember(indexes[0].Value, BindingRestrictions.GetInstanceRestriction(indexes[0].Expression, indexes[0].Value), () => base.BindGetIndex(binder, indexes));
+				return BindGetMember(indexes[0].Value, binder, BindingRestrictions.GetInstanceRestriction(indexes[0].Expression, indexes[0].Value), () => base.BindGetIndex(binder, indexes));
 			}
 
 			public override DynamicMetaObject BindGetMember(GetMemberBinder binder)
 			{
-				return BindGetMember(binder.Name, BindingRestrictions.Empty, () => base.BindGetMember(binder));
+				return BindGetMember(binder.Name, binder, BindingRestrictions.Empty, () => base.BindGetMember(binder));
 			}
 
 			public override DynamicMetaObject BindSetIndex(SetIndexBinder binder, DynamicMetaObject[] indexes, DynamicMetaObject value)
 			{
-				return BindSetMember(indexes[0].Value, true, value.Expression, BindingRestrictions.GetInstanceRestriction(indexes[0].Expression, indexes[0].Value), () => base.BindSetIndex(binder, indexes, value));
+				return BindSetMember(indexes[0].Value, value.Expression, binder, BindingRestrictions.GetInstanceRestriction(indexes[0].Expression, indexes[0].Value), () => base.BindSetIndex(binder, indexes, value));
 			}
 
 			public override DynamicMetaObject BindSetMember(SetMemberBinder binder, DynamicMetaObject value)
 			{
-				var langBinder = binder as TjsSetMemberBinder;
-				return BindSetMember(binder.Name, langBinder != null ? langBinder.ForceCreate : true, value.Expression, BindingRestrictions.Empty, () => base.BindSetMember(binder, value));
+				return BindSetMember(binder.Name, value.Expression, binder, BindingRestrictions.Empty, () => base.BindSetMember(binder, value));
 			}
 
 			public override IEnumerable<string> GetDynamicMemberNames() { return Value.GetMemberNames(); }

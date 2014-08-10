@@ -41,12 +41,37 @@ namespace IronTjs.Compiler.Ast
 
 		public override System.Linq.Expressions.Expression TransformRead()
 		{
-			return System.Linq.Expressions.Expression.Dynamic(LanguageContext.CreateGetMemberBinder(MemberName, false), typeof(object), TargetExpression);
+			bool direct = false;
+			for (var node = Parent; node != null; node = node.Parent)
+			{
+				var unary = node as UnaryExpression;
+				if (unary != null && unary.ExpressionType == Runtime.Binding.TjsOperationKind.AccessPropertyObject)
+				{
+					direct = true;
+					break;
+				}
+			}
+			return System.Linq.Expressions.Expression.Dynamic(LanguageContext.CreateGetMemberBinder(MemberName, false, direct), typeof(object), TargetExpression);
 		}
 
 		public override System.Linq.Expressions.Expression TransformWrite(System.Linq.Expressions.Expression value)
 		{
-			return System.Linq.Expressions.Expression.Dynamic(LanguageContext.CreateSetMemberBinder(MemberName, false, true), typeof(object), TargetExpression, value);
+			bool direct = false;
+			for (var node = Parent; node != null; node = node.Parent)
+			{
+				var unary = node as UnaryExpression;
+				if (unary != null && unary.ExpressionType == Runtime.Binding.TjsOperationKind.AccessPropertyObject)
+				{
+					direct = true;
+					break;
+				}
+			}
+			return System.Linq.Expressions.Expression.Dynamic(LanguageContext.CreateSetMemberBinder(MemberName, false, true, direct), typeof(object), TargetExpression, value);
+		}
+
+		public override System.Linq.Expressions.Expression TransformDelete()
+		{
+			return System.Linq.Expressions.Expression.Dynamic(LanguageContext.CreateDeleteMemberBinder(MemberName, false, true), typeof(object), TargetExpression);
 		}
 
 		public override System.Linq.Expressions.Expression TransformVoid() { return System.Linq.Expressions.Expression.Empty(); }
@@ -67,12 +92,37 @@ namespace IronTjs.Compiler.Ast
 
 		public override System.Linq.Expressions.Expression TransformRead()
 		{
-			return System.Linq.Expressions.Expression.Dynamic(LanguageContext.CreateGetIndexBinder(new CallInfo(2)), typeof(object), Target.TransformRead(), Member.TransformRead());
+			bool direct = false;
+			for (var node = Parent; node != null; node = node.Parent)
+			{
+				var unary = node as UnaryExpression;
+				if (unary != null && unary.ExpressionType == Runtime.Binding.TjsOperationKind.AccessPropertyObject)
+				{
+					direct = true;
+					break;
+				}
+			}
+			return System.Linq.Expressions.Expression.Dynamic(LanguageContext.CreateGetIndexBinder(new CallInfo(2), direct), typeof(object), Target.TransformRead(), Member.TransformRead());
 		}
 
 		public override System.Linq.Expressions.Expression TransformWrite(System.Linq.Expressions.Expression value)
 		{
-			return System.Linq.Expressions.Expression.Dynamic(LanguageContext.CreateSetIndexBinder(new CallInfo(3)), typeof(object), Target.TransformRead(), Member.TransformRead(), value);
+			bool direct = false;
+			for (var node = Parent; node != null; node = node.Parent)
+			{
+				var unary = node as UnaryExpression;
+				if (unary != null && unary.ExpressionType == Runtime.Binding.TjsOperationKind.AccessPropertyObject)
+				{
+					direct = true;
+					break;
+				}
+			}
+			return System.Linq.Expressions.Expression.Dynamic(LanguageContext.CreateSetIndexBinder(new CallInfo(3), direct), typeof(object), Target.TransformRead(), Member.TransformRead(), value);
+		}
+
+		public override System.Linq.Expressions.Expression TransformDelete()
+		{
+			return System.Linq.Expressions.Expression.Dynamic(LanguageContext.CreateDeleteIndexBinder(new CallInfo(2)), typeof(object), Target.TransformRead(), Member.TransformRead());
 		}
 
 		public override System.Linq.Expressions.Expression TransformVoid() { return System.Linq.Expressions.Expression.Empty(); }

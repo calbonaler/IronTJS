@@ -9,11 +9,17 @@ using Microsoft.Scripting.Utils;
 
 namespace IronTjs.Runtime.Binding
 {
-	class TjsGetIndexBinder : GetIndexBinder
+	class TjsGetIndexBinder : GetIndexBinder, IDirectAccessible
 	{
-		public TjsGetIndexBinder(TjsContext context, CallInfo callInfo) : base(callInfo) { _context = context; }
+		public TjsGetIndexBinder(TjsContext context, CallInfo callInfo, bool direct) : base(callInfo)
+		{
+			_context = context;
+			DirectAccess = direct;
+		}
 
 		readonly TjsContext _context;
+
+		public bool DirectAccess { get; private set; }
 
 		public override DynamicMetaObject FallbackGetIndex(DynamicMetaObject target, DynamicMetaObject[] indexes, DynamicMetaObject errorSuggestion)
 		{
@@ -27,7 +33,7 @@ namespace IronTjs.Runtime.Binding
 			}
 			if (indexes[0].LimitType == typeof(string))
 			{
-				result = target.BindGetMember(new TjsGetMemberBinder(_context, (string)indexes[0].Value, false));
+				result = target.BindGetMember(new TjsGetMemberBinder(_context, (string)indexes[0].Value, false, DirectAccess));
 				return new DynamicMetaObject(result.Expression, result.Restrictions.Merge(
 					BindingRestrictions.GetInstanceRestriction(indexes[0].Expression, indexes[0].Value)
 				).Merge(

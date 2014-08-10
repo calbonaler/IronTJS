@@ -9,11 +9,17 @@ namespace IronTjs.Runtime.Binding
 {
 	using AstUtils = Microsoft.Scripting.Ast.Utils;
 
-	class TjsGetMemberBinder : GetMemberBinder
+	class TjsGetMemberBinder : GetMemberBinder, IDirectAccessible
 	{
-		public TjsGetMemberBinder(TjsContext context, string name, bool ignoreCase) : base(name, ignoreCase) { _context = context; }
+		public TjsGetMemberBinder(TjsContext context, string name, bool ignoreCase, bool direct) : base(name, ignoreCase)
+		{
+			_context = context;
+			DirectAccess = direct;
+		}
 
 		readonly TjsContext _context;
+
+		public bool DirectAccess { get; private set; }
 
 		public override DynamicMetaObject FallbackGetMember(DynamicMetaObject target, DynamicMetaObject errorSuggestion)
 		{

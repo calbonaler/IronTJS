@@ -83,19 +83,24 @@ namespace IronTjs.Compiler.Ast
 			throw new ArgumentException("無効なデリゲート型です。");
 		}
 
-		public System.Linq.Expressions.Expression ResolveForRead(string name)
+		public System.Linq.Expressions.Expression ResolveForRead(string name, bool direct)
 		{
-			return System.Linq.Expressions.Expression.Dynamic(LanguageContext.CreateGetMemberBinder(name, false), typeof(object), GlobalObject);
+			return System.Linq.Expressions.Expression.Dynamic(LanguageContext.CreateGetMemberBinder(name, false, direct), typeof(object), GlobalObject);
 		}
 
-		public System.Linq.Expressions.Expression ResolveForWrite(string name, System.Linq.Expressions.Expression value)
+		public System.Linq.Expressions.Expression ResolveForWrite(string name, System.Linq.Expressions.Expression value, bool direct)
 		{
-			return System.Linq.Expressions.Expression.Dynamic(LanguageContext.CreateSetMemberBinder(name, false, false), typeof(object), GlobalObject, value);
+			return System.Linq.Expressions.Expression.Dynamic(LanguageContext.CreateSetMemberBinder(name, false, false, direct), typeof(object), GlobalObject, value);
+		}
+
+		public System.Linq.Expressions.Expression ResolveForDelete(string name)
+		{
+			return System.Linq.Expressions.Expression.Dynamic(LanguageContext.CreateDeleteMemberBinder(name, false, true), typeof(object), GlobalObject);
 		}
 
 		public System.Linq.Expressions.Expression DeclareVariable(string name, System.Linq.Expressions.Expression value)
 		{
-			return System.Linq.Expressions.Expression.Dynamic(LanguageContext.CreateSetMemberBinder(name, false, true), typeof(object), GlobalObject, value);
+			return System.Linq.Expressions.Expression.Dynamic(LanguageContext.CreateSetMemberBinder(name, false, true, true), typeof(object), GlobalObject, value);
 		}
 	}
 }

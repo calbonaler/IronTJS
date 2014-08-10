@@ -31,10 +31,12 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Dynamic">
+    <Reference Include="Microsoft.Dynamic, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Microsoft.Dynamic.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Scripting">
+    <Reference Include="Microsoft.Scripting, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Microsoft.Scripting.dll</HintPath>
     </Reference>
     <Reference Include="System" />
@@ -86,6 +88,8 @@
     <Compile Include="Hosting\TjsCommandLine.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Runtime\Binding\Binders.cs" />
+    <Compile Include="Runtime\Binding\IDirectAccessible.cs" />
+    <Compile Include="Runtime\Binding\IForceMemberCreatable.cs" />
     <Compile Include="Runtime\Binding\TjsBinaryOperationBinder.cs" />
     <Compile Include="Runtime\Binding\TjsBinder.cs" />
     <Compile Include="Runtime\Binding\TjsConvertBinder.cs" />
@@ -94,11 +98,13 @@
     <Compile Include="Runtime\Binding\TjsGetIndexBinder.cs" />
     <Compile Include="Runtime\Binding\TjsGetMemberBinder.cs" />
     <Compile Include="Runtime\Binding\TjsInvokeBinder.cs" />
+    <Compile Include="Runtime\Binding\TjsOperationBinder.cs" />
     <Compile Include="Runtime\Binding\TjsOperationKind.cs" />
     <Compile Include="Runtime\Binding\TjsOverloadResolver.cs" />
     <Compile Include="Runtime\Binding\TjsSetIndexBinder.cs" />
     <Compile Include="Runtime\Binding\TjsSetMemberBinder.cs" />
     <Compile Include="Runtime\Binding\TjsUnaryOperationBinder.cs" />
+    <Compile Include="Runtime\IContextChangeable.cs" />
     <Compile Include="Runtime\TjsContext.cs" />
     <Compile Include="Runtime\TjsFunction.cs" />
     <Compile Include="Runtime\TjsProperty.cs" />

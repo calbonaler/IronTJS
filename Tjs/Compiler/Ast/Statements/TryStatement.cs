@@ -48,9 +48,11 @@ namespace IronTjs.Compiler.Ast
 			return System.Linq.Expressions.Expression.Catch(Variable, body);
 		}
 
-		public System.Linq.Expressions.Expression ResolveForRead(string name) { return name == Variable.Name ? Variable : null; }
+		public System.Linq.Expressions.Expression ResolveForRead(string name, bool direct) { return name == Variable.Name ? Variable : null; }
 
-		public System.Linq.Expressions.Expression ResolveForWrite(string name, System.Linq.Expressions.Expression value) { return null; }
+		public System.Linq.Expressions.Expression ResolveForWrite(string name, System.Linq.Expressions.Expression value, bool direct) { return null; }
+
+		public System.Linq.Expressions.Expression ResolveForDelete(string name) { return Variable.Name == name ? System.Linq.Expressions.Expression.Constant(0L) : null; }
 
 		public System.Linq.Expressions.Expression DeclareVariable(string name, System.Linq.Expressions.Expression value) { return null; }
 	}

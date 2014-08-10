@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace IronTjs.Runtime
 {
-	public class TjsProperty
+	public class TjsProperty : IContextChangeable
 	{
 		public TjsProperty(Func<object, object[], object> getter, Func<object, object[], object> setter, object context)
 		{
@@ -36,5 +36,7 @@ namespace IronTjs.Runtime
 		}
 
 		public TjsProperty ChangeContext(object context) { return new TjsProperty(_getter, _setter, context); }
+
+		object IContextChangeable.ChangeContext(object context) { return ChangeContext(context); }
 	}
 }

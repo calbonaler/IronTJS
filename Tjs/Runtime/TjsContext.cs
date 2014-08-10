@@ -45,11 +45,13 @@ namespace IronTjs.Runtime
 
 		public override BinaryOperationBinder CreateBinaryOperationBinder(System.Linq.Expressions.ExpressionType operation) { return new TjsBinaryOperationBinder(this, operation); }
 
-		public override GetMemberBinder CreateGetMemberBinder(string name, bool ignoreCase) { return new TjsGetMemberBinder(this, name, ignoreCase); }
+		public override GetMemberBinder CreateGetMemberBinder(string name, bool ignoreCase) { return CreateGetMemberBinder(name, ignoreCase, false); }
 
-		public override SetMemberBinder CreateSetMemberBinder(string name, bool ignoreCase) { return CreateSetMemberBinder(name, ignoreCase, true); }
+		public GetMemberBinder CreateGetMemberBinder(string name, bool ignoreCase, bool direct) { return new TjsGetMemberBinder(this, name, ignoreCase, direct); }
 
-		public SetMemberBinder CreateSetMemberBinder(string name, bool ignoreCase, bool forceCreate) { return new TjsSetMemberBinder(this, name, ignoreCase, forceCreate); }
+		public override SetMemberBinder CreateSetMemberBinder(string name, bool ignoreCase) { return CreateSetMemberBinder(name, ignoreCase, true, false); }
+
+		public SetMemberBinder CreateSetMemberBinder(string name, bool ignoreCase, bool forceCreate, bool direct) { return new TjsSetMemberBinder(this, name, ignoreCase, forceCreate, direct); }
 		
 		public override DeleteMemberBinder CreateDeleteMemberBinder(string name, bool ignoreCase) { return new CompatibilityDeleteMemberBinder(this, name, ignoreCase); }
 
@@ -61,11 +63,13 @@ namespace IronTjs.Runtime
 				return CreateDeleteMemberBinder(name, ignoreCase);
 		}
 
-		public GetIndexBinder CreateGetIndexBinder(CallInfo callInfo) { return new TjsGetIndexBinder(this, callInfo); }
+		public GetIndexBinder CreateGetIndexBinder(CallInfo callInfo, bool direct) { return new TjsGetIndexBinder(this, callInfo, direct); }
 
-		public SetIndexBinder CreateSetIndexBinder(CallInfo callInfo) { return new TjsSetIndexBinder(this, callInfo); }
+		public SetIndexBinder CreateSetIndexBinder(CallInfo callInfo, bool direct) { return new TjsSetIndexBinder(this, callInfo, direct); }
 
 		public DynamicMetaObjectBinder CreateDeleteIndexBinder(CallInfo callInfo) { return new TjsDeleteIndexBinder(this, callInfo); }
+
+		public DynamicMetaObjectBinder CreateOperationBinder(TjsOperationKind operation) { return new TjsOperationBinder(this, operation); }
 
 #if !DEBUG
 		public override string FormatException(Exception exception)

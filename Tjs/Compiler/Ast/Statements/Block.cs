@@ -31,17 +31,19 @@ namespace IronTjs.Compiler.Ast
 			return System.Linq.Expressions.Expression.Block(variables.Values, transformed);
 		}
 
-		public System.Linq.Expressions.Expression ResolveForRead(string name)
+		public System.Linq.Expressions.Expression ResolveForRead(string name, bool direct)
 		{
 			System.Linq.Expressions.ParameterExpression param;
 			return variables.TryGetValue(name, out param) ? param : null;
 		}
 
-		public System.Linq.Expressions.Expression ResolveForWrite(string name, System.Linq.Expressions.Expression value)
+		public System.Linq.Expressions.Expression ResolveForWrite(string name, System.Linq.Expressions.Expression value, bool direct)
 		{
 			System.Linq.Expressions.ParameterExpression param;
 			return variables.TryGetValue(name, out param) ? System.Linq.Expressions.Expression.Assign(param, value) : null;
 		}
+
+		public System.Linq.Expressions.Expression ResolveForDelete(string name) { return variables.ContainsKey(name) ? System.Linq.Expressions.Expression.Constant(0L) : null; }
 
 		public System.Linq.Expressions.Expression DeclareVariable(string name, System.Linq.Expressions.Expression value)
 		{
