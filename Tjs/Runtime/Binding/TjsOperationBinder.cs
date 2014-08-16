@@ -71,7 +71,8 @@ namespace IronTjs.Runtime.Binding
 							exp = Expression.Call(convertedTarget, "SetValue", null, args[0].Expression);
 							usedArgs = 2;
 						}
-						throw Microsoft.Scripting.Utils.Assert.Unreachable;
+						else
+							throw Microsoft.Scripting.Utils.Assert.Unreachable;
 					}
 					else
 						exp = Expression.Throw(Expression.Constant(new InvalidOperationException("プロパティ以外に対して * 演算子が使用されました。")), typeof(object));
