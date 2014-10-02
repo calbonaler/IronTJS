@@ -19,6 +19,7 @@ namespace IronTjs.Compiler
 
 		Tokenizer _tokenizer;
 		CompilerContext _context;
+		bool _parsedIncompleteIf = false;
 
 		Token Accept(params TokenType[] types)
 		{
@@ -75,6 +76,8 @@ namespace IronTjs.Compiler
 						else
 							props = ScriptCodeParseResult.Invalid;
 					}
+					else if (_parsedIncompleteIf)
+						props = ScriptCodeParseResult.IncompleteStatement;
 					else
 						props = ScriptCodeParseResult.Complete;
 					context.SourceUnit.CodeProperties = props;
@@ -228,13 +231,17 @@ namespace IronTjs.Compiler
 			}
 			else if (Accept(TokenType.KeywordIf) != null)
 			{
+				_parsedIncompleteIf = true;
 				Expect(TokenType.SymbolOpenParenthesis);
 				var test = ParseExpression();
 				Expect(TokenType.SymbolCloseParenthesis);
 				var ifTrue = ParseStatement();
 				Statement ifFalse = null;
 				if (Accept(TokenType.KeywordElse) != null)
+				{
 					ifFalse = ParseStatement();
+					_parsedIncompleteIf = false;
+				}
 				return new IfStatement(test, ifTrue, ifFalse);
 			}
 			else if (Accept(TokenType.KeywordSwitch) != null)

@@ -7,12 +7,19 @@ using IronTjs.Hosting;
 using IronTjs.Runtime;
 using Microsoft.Scripting.Hosting;
 using Microsoft.Scripting.Hosting.Shell;
+using Microsoft.Scripting.Utils;
 
 sealed class TjsConsoleHost : ConsoleHost
 {
 	protected override Type Provider { get { return typeof(TjsContext); } }
 
 	protected override CommandLine CreateCommandLine() { return new TjsCommandLine(InitializeScope); }
+
+	protected override IConsole CreateConsole(ScriptEngine engine, CommandLine commandLine, ConsoleOptions options)
+	{
+		ContractUtils.RequiresNotNull(options, "options");
+		return new SuperConsole(commandLine, options.ColorfulConsole);
+	}
 
 	void InitializeScope(ScriptScope scope)
 	{
