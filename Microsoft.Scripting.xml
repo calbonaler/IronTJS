@@ -299,6 +299,18 @@
             <param name="errorCode">エラーコードを表す数値を指定します。</param>
             <param name="severity">エラーの深刻さを示す値を指定します。</param>
         </member>
+        <member name="M:Microsoft.Scripting.ErrorCounter.Add(System.String,System.String,System.String,System.String,Microsoft.Scripting.SourceSpan,System.Int32,Microsoft.Scripting.Severity)">
+            <summary>
+            この <see cref="T:Microsoft.Scripting.ErrorSink"/> オブジェクトにエラーを追加します。
+            このオーバーロードは <see cref="T:Microsoft.Scripting.SourceUnit"/> オブジェクトが使用できない場合に呼び出されます。</summary>
+            <param name="message">エラーに対するメッセージを指定します。</param>
+            <param name="path">エラーが発生したソースコードのパスを指定します。</param>
+            <param name="code">エラーが発生したソースコードを指定します。</param>
+            <param name="line">エラーが発生した行を指定します。</param>
+            <param name="span">エラーが発生したソースコード上の場所を示す <see cref="T:Microsoft.Scripting.SourceSpan"/> を指定します。</param>
+            <param name="errorCode">エラーコードを表す数値を指定します。</param>
+            <param name="severity">エラーの深刻さを示す値を指定します。</param>
+        </member>
         <member name="P:Microsoft.Scripting.ErrorCounter.FatalErrorCount">
             <summary>発生したエラー中の <see cref="F:Microsoft.Scripting.Severity.FatalError"/> の個数を取得します。</summary>
         </member>
@@ -521,6 +533,18 @@
             <summary>この <see cref="T:Microsoft.Scripting.ErrorSink"/> オブジェクトにエラーを追加します。</summary>
             <param name="sourceUnit">エラーが発生したソースコードを示す <see cref="T:Microsoft.Scripting.SourceUnit"/> を指定します。</param>
             <param name="message">エラーに対するメッセージを指定します。</param>
+            <param name="span">エラーが発生したソースコード上の場所を示す <see cref="T:Microsoft.Scripting.SourceSpan"/> を指定します。</param>
+            <param name="errorCode">エラーコードを表す数値を指定します。</param>
+            <param name="severity">エラーの深刻さを示す値を指定します。</param>
+        </member>
+        <member name="M:Microsoft.Scripting.Hosting.ErrorListenerProxySink.Add(System.String,System.String,System.String,System.String,Microsoft.Scripting.SourceSpan,System.Int32,Microsoft.Scripting.Severity)">
+            <summary>
+            この <see cref="T:Microsoft.Scripting.ErrorSink"/> オブジェクトにエラーを追加します。
+            このオーバーロードは <see cref="T:Microsoft.Scripting.SourceUnit"/> オブジェクトが使用できない場合に呼び出されます。</summary>
+            <param name="message">エラーに対するメッセージを指定します。</param>
+            <param name="path">エラーが発生したソースコードのパスを指定します。</param>
+            <param name="code">エラーが発生したソースコードを指定します。</param>
+            <param name="line">エラーが発生した行を指定します。</param>
             <param name="span">エラーが発生したソースコード上の場所を示す <see cref="T:Microsoft.Scripting.SourceSpan"/> を指定します。</param>
             <param name="errorCode">エラーコードを表す数値を指定します。</param>
             <param name="severity">エラーの深刻さを示す値を指定します。</param>

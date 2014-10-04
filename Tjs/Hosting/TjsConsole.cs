@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using IronTjs.Compiler;
 using Microsoft.Scripting.Hosting.Shell;
 using Microsoft.Scripting.Utils;
 
@@ -84,6 +86,10 @@ namespace IronTjs.Hosting
 
 		void Render()
 		{
+			var tokenizer = new Tokenizer();
+			tokenizer.ErrorSink = Microsoft.Scripting.ErrorSink.Null;
+			tokenizer.Initialize(null, new StringReader(_input.ToString()), null, Microsoft.Scripting.SourceLocation.MinValue);
+			var tokens = tokenizer.ReadTokens(_input.Length);
 			_inputToOutputTable = new int[_input.Length + 1];
 			_cursor.Reset();
 			StringBuilder output = new StringBuilder();
@@ -107,7 +113,23 @@ namespace IronTjs.Hosting
 			}
 			_inputToOutputTable[_input.Length] = output.Length;
 			var text = output.ToString();
-			Output.Write(text);
+			int end = 0;
+			foreach (var token in tokens)
+			{
+				var start = _inputToOutputTable[token.SourceSpan.Start.Index];
+				if (end != start)
+					WriteColor(Output, text.Substring(end, start - end), ConsoleColor.Cyan);
+				end = _inputToOutputTable[token.SourceSpan.End.Index];
+				var target = text.Substring(start, end - start);
+				if (token.Category == Microsoft.Scripting.TokenCategory.Keyword)
+					WriteColor(Output, target, ConsoleColor.Yellow);
+				else if (token.Category == Microsoft.Scripting.TokenCategory.StringLiteral || token.Category == Microsoft.Scripting.TokenCategory.NumericLiteral)
+					WriteColor(Output, target, ConsoleColor.Magenta);
+				else
+					Output.Write(target);
+			}
+			if (end != text.Length)
+				WriteColor(Output, text.Substring(end), ConsoleColor.Cyan);
 			if (text.Length < _rendered)
 				Output.Write(new string(' ', _rendered - text.Length));
 			_rendered = text.Length;
