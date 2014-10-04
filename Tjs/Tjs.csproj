@@ -87,6 +87,7 @@
     <Compile Include="Compiler\Tokenizer.cs" />
     <Compile Include="Compiler\Token.cs" />
     <Compile Include="Hosting\TjsCommandLine.cs" />
+    <Compile Include="Hosting\TjsConsole.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Runtime\Binding\Binders.cs" />
     <Compile Include="Runtime\Binding\IDirectAccessible.cs" />

@@ -53,6 +53,18 @@ namespace IronTjs.Compiler
 			//return new Token(types[0], dummyValue, errorSpan);
 		}
 
+		public static int GetNextAutoIndentSize(string text, int autoIndentTabWidth)
+		{
+			ContractUtils.RequiresNotNull(text, "text");
+			var lastLine = text.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries).LastOrDefault();
+			if (lastLine == null)
+				return 0;
+			var autoIndentSize = lastLine.TakeWhile(x => x == ' ' || x == '\t').Aggregate(0, (x, y) => y == ' ' ? x + 1 : x + autoIndentTabWidth);
+			if (lastLine.Trim().EndsWith("{"))
+				autoIndentSize += autoIndentTabWidth;
+			return autoIndentSize;
+		}
+
 		public SourceUnitTree Parse(CompilerContext context)
 		{
 			_tokenizer = new Tokenizer();
@@ -95,11 +107,20 @@ namespace IronTjs.Compiler
 			while (_tokenizer.NextToken.Type != TokenType.EndOfStream)
 			{
 				if (Accept(TokenType.KeywordClass) != null)
+				{
 					classes.Add(ParseClassDefinition());
+					_parsedIncompleteIf = false;
+				}
 				else if (Accept(TokenType.KeywordFunction) != null)
+				{
 					functions.Add(ParseFunctionDefinition());
+					_parsedIncompleteIf = false;
+				}
 				else if (Accept(TokenType.KeywordProperty) != null)
+				{
 					properties.Add(ParsePropertyDefinition());
+					_parsedIncompleteIf = false;
+				}
 				else
 					statements.Add(ParseStatement());
 			}
@@ -227,15 +248,16 @@ namespace IronTjs.Compiler
 				List<Statement> statements = new List<Statement>();
 				while (Accept(TokenType.SymbolCloseBrace) == null)
 					statements.Add(ParseStatement());
+				_parsedIncompleteIf = false;
 				return new Block(statements);
 			}
 			else if (Accept(TokenType.KeywordIf) != null)
 			{
-				_parsedIncompleteIf = true;
 				Expect(TokenType.SymbolOpenParenthesis);
 				var test = ParseExpression();
 				Expect(TokenType.SymbolCloseParenthesis);
 				var ifTrue = ParseStatement();
+				_parsedIncompleteIf = true;
 				Statement ifFalse = null;
 				if (Accept(TokenType.KeywordElse) != null)
 				{
@@ -277,7 +299,10 @@ namespace IronTjs.Compiler
 						Expect(TokenType.SymbolColon);
 					}
 					else
+					{
+						_parsedIncompleteIf = false;
 						return new SwitchStatement(cond, cases);
+					}
 				}
 			}
 			else if (Accept(TokenType.KeywordWhile) != null)
@@ -285,7 +310,9 @@ namespace IronTjs.Compiler
 				Expect(TokenType.SymbolOpenParenthesis);
 				var cond = ParseExpression();
 				Expect(TokenType.SymbolCloseParenthesis);
-				return new WhileStatement(cond, ParseStatement());
+				var body = ParseStatement();
+				_parsedIncompleteIf = false;
+				return new WhileStatement(cond, body);
 			}
 			else if (Accept(TokenType.KeywordDo) != null)
 			{
@@ -295,6 +322,7 @@ namespace IronTjs.Compiler
 				var cond = ParseExpression();
 				Expect(TokenType.SymbolCloseParenthesis);
 				Expect(TokenType.SymbolSemicolon);
+				_parsedIncompleteIf = false;
 				return new DoWhileStatement(body, cond);
 			}
 			else if (Accept(TokenType.KeywordFor) != null)
@@ -321,7 +349,9 @@ namespace IronTjs.Compiler
 					update = ParseExpression();
 					Expect(TokenType.SymbolCloseParenthesis);
 				}
-				return new ForStatement(init, condition, update, ParseStatement());
+				var body = ParseStatement();
+				_parsedIncompleteIf = false;
+				return new ForStatement(init, condition, update, body);
 			}
 			else if (Accept(TokenType.KeywordTry) != null)
 			{
@@ -334,6 +364,7 @@ namespace IronTjs.Compiler
 					Expect(TokenType.SymbolCloseParenthesis);
 				}
 				var catchBody = ParseStatement();
+				_parsedIncompleteIf = false;
 				return new TryStatement(body, new CatchBlock(catchVariableName, catchBody));
 			}
 			else if (Accept(TokenType.KeywordWith) != null)
@@ -341,7 +372,9 @@ namespace IronTjs.Compiler
 				Expect(TokenType.SymbolOpenParenthesis);
 				var exp = ParseExpression();
 				Expect(TokenType.SymbolCloseParenthesis);
-				return new WithStatement(exp, ParseStatement());
+				var body = ParseStatement();
+				_parsedIncompleteIf = false;
+				return new WithStatement(exp, body);
 			}
 			else if (Accept(TokenType.KeywordBreak) != null)
 			{

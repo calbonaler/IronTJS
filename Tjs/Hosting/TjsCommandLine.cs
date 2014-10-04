@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using IronTjs.Compiler;
 using Microsoft.Scripting;
 using Microsoft.Scripting.Hosting;
 using Microsoft.Scripting.Hosting.Shell;
@@ -32,5 +33,7 @@ namespace IronTjs.Hosting
 			else
 				Console.WriteLine(result.ToString(), Style.Out);
 		}
+
+		protected override int GetNextAutoIndentSize(string text) { return Parser.GetNextAutoIndentSize(text, Options.AutoIndentSize); }
 	}
 }
