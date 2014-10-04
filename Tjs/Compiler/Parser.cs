@@ -53,14 +53,11 @@ namespace IronTjs.Compiler
 			//return new Token(types[0], dummyValue, errorSpan);
 		}
 
-		public static int GetNextAutoIndentSize(string text, int autoIndentTabWidth)
+		public static int GetNextAutoIndentSize(SourceUnit sourceUnit, int autoIndentTabWidth)
 		{
-			ContractUtils.RequiresNotNull(text, "text");
-			var lastLine = text.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries).LastOrDefault();
-			if (lastLine == null)
-				return 0;
-			var autoIndentSize = lastLine.TakeWhile(x => x == ' ' || x == '\t').Aggregate(0, (x, y) => y == ' ' ? x + 1 : x + autoIndentTabWidth);
-			if (lastLine.Trim().EndsWith("{"))
+			new Parser().Parse(new CompilerContext(sourceUnit, new CompilerOptions(), ErrorSink.Null));
+			var autoIndentSize = sourceUnit.GetCode().TakeWhile(x => x == ' ' || x == '\t').Aggregate(0, (x, y) => y == ' ' ? x + 1 : x + autoIndentTabWidth);
+			if (sourceUnit.CodeProperties != ScriptCodeParseResult.Complete)
 				autoIndentSize += autoIndentTabWidth;
 			return autoIndentSize;
 		}

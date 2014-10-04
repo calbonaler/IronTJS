@@ -34,6 +34,12 @@ namespace IronTjs.Hosting
 				Console.WriteLine(result.ToString(), Style.Out);
 		}
 
-		protected override int GetNextAutoIndentSize(string text) { return Parser.GetNextAutoIndentSize(text, Options.AutoIndentSize); }
+		protected override int GetNextAutoIndentSize(string text)
+		{
+			var lastLine = text.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries).LastOrDefault();
+			if (lastLine == null)
+				return 0;
+			return Parser.GetNextAutoIndentSize(Language.CreateSnippet(lastLine, SourceCodeKind.InteractiveCode), Options.AutoIndentSize);
+		}
 	}
 }
