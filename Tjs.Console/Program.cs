@@ -45,7 +45,7 @@ sealed class TjsConsoleHost : ConsoleHost
 		{
 			if (args.Length > 0)
 				ConsoleIO.Write(string.Concat(args[0]), Style.Prompt);
-			return ConsoleIO.ReadLine(0);
+			return ConsoleIO.ReadLine(-1);
 		}, null));
 	}
 

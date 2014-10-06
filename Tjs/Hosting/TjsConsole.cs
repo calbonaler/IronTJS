@@ -51,6 +51,7 @@ namespace IronTjs.Hosting
 		Cursor _cursor;
 		int[] _inputToOutputTable = new[] { 0 };
 		int _tabWidth;
+		bool _coloringInput;
 
 		void Initialize()
 		{
@@ -86,10 +87,6 @@ namespace IronTjs.Hosting
 
 		void Render()
 		{
-			var tokenizer = new Tokenizer();
-			tokenizer.ErrorSink = Microsoft.Scripting.ErrorSink.Null;
-			tokenizer.Initialize(null, new StringReader(_input.ToString()), null, Microsoft.Scripting.SourceLocation.MinValue);
-			var tokens = tokenizer.ReadTokens(_input.Length);
 			_inputToOutputTable = new int[_input.Length + 1];
 			_cursor.Reset();
 			StringBuilder output = new StringBuilder();
@@ -113,23 +110,99 @@ namespace IronTjs.Hosting
 			}
 			_inputToOutputTable[_input.Length] = output.Length;
 			var text = output.ToString();
-			int end = 0;
-			foreach (var token in tokens)
+			if (_coloringInput)
 			{
-				var start = _inputToOutputTable[token.SourceSpan.Start.Index];
-				if (end != start)
-					WriteColor(Output, text.Substring(end, start - end), ConsoleColor.Cyan);
-				end = _inputToOutputTable[token.SourceSpan.End.Index];
-				var target = text.Substring(start, end - start);
-				if (token.Category == Microsoft.Scripting.TokenCategory.Keyword)
-					WriteColor(Output, target, ConsoleColor.Yellow);
-				else if (token.Category == Microsoft.Scripting.TokenCategory.StringLiteral || token.Category == Microsoft.Scripting.TokenCategory.NumericLiteral)
-					WriteColor(Output, target, ConsoleColor.Magenta);
-				else
-					Output.Write(target);
+				int end = 0;
+				var tokenizer = new Tokenizer();
+				tokenizer.ErrorSink = Microsoft.Scripting.ErrorSink.Null;
+				tokenizer.Initialize(null, new StringReader(_input.ToString()), null, Microsoft.Scripting.SourceLocation.MinValue);
+				List<Token> tokens = new List<Token>();
+				while (tokenizer.NextToken.Type != TokenType.EndOfStream)
+					tokens.Add(tokenizer.Read());
+				foreach (var token in tokens)
+				{
+					var start = _inputToOutputTable[token.Span.Start.Index];
+					if (end != start)
+						WriteColor(Output, text.Substring(end, start - end), ConsoleColor.Cyan);
+					end = _inputToOutputTable[token.Span.End.Index];
+					ConsoleColor color;
+					switch (token.Type)
+					{
+						case TokenType.KeywordClass:
+						case TokenType.KeywordConst:
+						case TokenType.KeywordEnum:
+						case TokenType.KeywordExtends:
+						case TokenType.KeywordFunction:
+						case TokenType.KeywordPrivate:
+						case TokenType.KeywordProperty:
+						case TokenType.KeywordProtected:
+						case TokenType.KeywordPublic:
+						case TokenType.KeywordStatic:
+						case TokenType.KeywordSynchronized:
+						case TokenType.KeywordInt:
+						case TokenType.KeywordOctet:
+						case TokenType.KeywordReal:
+						case TokenType.KeywordString:
+							color = ConsoleColor.Green;
+							break;
+						case TokenType.KeywordBreak:
+						case TokenType.KeywordCase:
+						case TokenType.KeywordCatch:
+						case TokenType.KeywordContinue:
+						case TokenType.KeywordDebugger:
+						case TokenType.KeywordDefault:
+						case TokenType.KeywordDelete:
+						case TokenType.KeywordDo:
+						case TokenType.KeywordElse:
+						case TokenType.KeywordExport:
+						case TokenType.KeywordFinally:
+						case TokenType.KeywordFor:
+						case TokenType.KeywordGetter:
+						case TokenType.KeywordGlobal:
+						case TokenType.KeywordGoTo:
+						case TokenType.KeywordIf:
+						case TokenType.KeywordImport:
+						case TokenType.KeywordIn:
+						case TokenType.KeywordInContextOf:
+						case TokenType.KeywordInstanceOf:
+						case TokenType.KeywordInvalidate:
+						case TokenType.KeywordIsValid:
+						case TokenType.KeywordNew:
+						case TokenType.KeywordReturn:
+						case TokenType.KeywordSetter:
+						case TokenType.KeywordSuper:
+						case TokenType.KeywordSwitch:
+						case TokenType.KeywordThis:
+						case TokenType.KeywordThrow:
+						case TokenType.KeywordTry:
+						case TokenType.KeywordTypeOf:
+						case TokenType.KeywordVar:
+						case TokenType.KeywordWhile:
+						case TokenType.KeywordWith:
+							color = ConsoleColor.Yellow;
+							break;
+						case TokenType.KeywordFalse:
+						case TokenType.KeywordInfinity:
+						case TokenType.KeywordNaN:
+						case TokenType.KeywordNull:
+						case TokenType.KeywordTrue:
+						case TokenType.KeywordVoid:
+						case TokenType.LiteralInteger:
+						case TokenType.LiteralReal:
+						case TokenType.LiteralString:
+							color = ConsoleColor.Magenta;
+							break;
+						default:
+							color = ConsoleColor.White;
+							break;
+					}
+					WriteColor(Output, text.Substring(start, end - start), color);
+				}
+				if (end != text.Length)
+					WriteColor(Output, text.Substring(end), ConsoleColor.Cyan);
 			}
-			if (end != text.Length)
-				WriteColor(Output, text.Substring(end), ConsoleColor.Cyan);
+			else
+				WriteColor(Output, text, ConsoleColor.White);
 			if (text.Length < _rendered)
 				Output.Write(new string(' ', _rendered - text.Length));
 			_rendered = text.Length;
@@ -150,6 +223,7 @@ namespace IronTjs.Hosting
 
 		public override string ReadLine(int autoIndentSize)
 		{
+			_coloringInput = autoIndentSize >= 0;
 			Initialize();
 			for (int i = 0; i < autoIndentSize / _tabWidth; i++)
 				Insert('\t');
