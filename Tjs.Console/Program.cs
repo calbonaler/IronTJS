@@ -31,7 +31,7 @@ sealed class TjsConsoleHost : ConsoleHost
 
 	void InitializeScope(ScriptScope scope)
 	{
-		scope.SetVariable("print", new TjsFunction((context, args) =>
+		scope.SetVariable("print", new Function((context, args) =>
 		{
 			if (args.Length <= 0)
 				ConsoleIO.WriteLine();
@@ -41,7 +41,7 @@ sealed class TjsConsoleHost : ConsoleHost
 				ConsoleIO.WriteLine(string.Format(args[0].ToString(), Microsoft.Scripting.Utils.ArrayUtils.RemoveFirst(args)), Style.Out);
 			return IronTjs.Builtins.TjsVoid.Value;
 		}, null));
-		scope.SetVariable("scan", new TjsFunction((context, args) =>
+		scope.SetVariable("scan", new Function((context, args) =>
 		{
 			if (args.Length > 0)
 				ConsoleIO.Write(string.Concat(args[0]), Style.Prompt);

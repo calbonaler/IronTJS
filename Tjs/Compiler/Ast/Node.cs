@@ -11,15 +11,17 @@ namespace IronTjs.Compiler.Ast
 	{
 		public Node Parent { get; internal set; }
 
-		public TjsContext LanguageContext
+		public SourceUnitTree GlobalParent
 		{
 			get
 			{
 				var node = this;
 				while (node.Parent != null)
 					node = node.Parent;
-				return (TjsContext)((SourceUnitTree)node).CompilerContext.SourceUnit.LanguageContext;
+				return (SourceUnitTree)node;
 			}
 		}
+
+		public TjsContext LanguageContext { get { return (TjsContext)GlobalParent.CompilerContext.SourceUnit.LanguageContext; } }
 	}
 }

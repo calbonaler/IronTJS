@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using IronTjs.Runtime.Binding;
 using Microsoft.Scripting.Utils;
 using MSAst = System.Linq.Expressions;
 
@@ -44,7 +45,10 @@ namespace IronTjs.Compiler.Ast
 			if (param != null || variables.TryGetValue(name, out param))
 				return param;
 			else
-				return System.Linq.Expressions.Expression.Dynamic(LanguageContext.CreateGetMemberBinder(name, false, direct), typeof(object), context);
+				return System.Linq.Expressions.Expression.Dynamic(new ThisProxyMemberAccessBinder(
+					LanguageContext, name, false,
+					direct ? MemberAccessKind.Get | MemberAccessKind.Direct : MemberAccessKind.Get
+				), typeof(object), context, GlobalParent.GlobalObject);
 		}
 
 		public System.Linq.Expressions.Expression ResolveForWrite(string name, System.Linq.Expressions.Expression value, bool direct)
@@ -53,7 +57,10 @@ namespace IronTjs.Compiler.Ast
 			if (param != null || variables.TryGetValue(name, out param))
 				return System.Linq.Expressions.Expression.Assign(param, value);
 			else
-				return System.Linq.Expressions.Expression.Dynamic(LanguageContext.CreateSetMemberBinder(name, false, false, direct), typeof(object), context, value);
+				return System.Linq.Expressions.Expression.Dynamic(new ThisProxyMemberAccessBinder(
+					LanguageContext, name, false,
+					direct ? MemberAccessKind.Set | MemberAccessKind.Direct : MemberAccessKind.Set
+				), typeof(object), context, GlobalParent.GlobalObject, value);
 		}
 
 		public MSAst.Expression ResolveForDelete(string name)
@@ -62,7 +69,9 @@ namespace IronTjs.Compiler.Ast
 			if (param != null || variables.TryGetValue(name, out param))
 				return System.Linq.Expressions.Expression.Constant(0L);
 			else
-				return System.Linq.Expressions.Expression.Dynamic(LanguageContext.CreateDeleteMemberBinder(name, false, true), typeof(object), context);
+				return System.Linq.Expressions.Expression.Dynamic(new ThisProxyMemberAccessBinder(
+					LanguageContext, name, false, MemberAccessKind.Delete
+				), typeof(object), context, GlobalParent.GlobalObject);
 		}
 
 		public System.Linq.Expressions.Expression DeclareVariable(string name, System.Linq.Expressions.Expression value)
@@ -112,7 +121,7 @@ namespace IronTjs.Compiler.Ast
 		{
 			var lambda = TransformLambda();
 			return MSAst.Expression.Dynamic(LanguageContext.CreateSetMemberBinder(Name, false, true, true), typeof(object), registeredTo,
-				MSAst.Expression.New(typeof(IronTjs.Runtime.TjsFunction).GetConstructor(new[] { typeof(Func<object, object[], object>), typeof(object) }),
+				MSAst.Expression.New(typeof(IronTjs.Runtime.Function).GetConstructor(new[] { typeof(Func<object, object[], object>), typeof(object) }),
 					lambda,
 					registeredTo
 				)

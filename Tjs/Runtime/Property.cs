@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace IronTjs.Runtime
 {
-	public class TjsProperty : IContextChangeable
+	public class Property : IContextChangeable
 	{
-		public TjsProperty(Func<object, object[], object> getter, Func<object, object[], object> setter, object context)
+		public Property(Func<object, object[], object> getter, Func<object, object[], object> setter, object context)
 		{
 			_getter = getter;
 			_setter = setter;
@@ -36,7 +36,7 @@ namespace IronTjs.Runtime
 			}
 		}
 
-		public TjsProperty ChangeContext(object context) { return new TjsProperty(_getter, _setter, context); }
+		public Property ChangeContext(object context) { return new Property(_getter, _setter, context); }
 
 		IContextChangeable IContextChangeable.ChangeContext(object context) { return ChangeContext(context); }
 	}

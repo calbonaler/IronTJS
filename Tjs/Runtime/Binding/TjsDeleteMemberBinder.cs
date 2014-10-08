@@ -25,7 +25,12 @@ namespace IronTjs.Runtime.Binding
 
 		public override DynamicMetaObject Bind(DynamicMetaObject target, DynamicMetaObject[] args)
 		{
-			var obj =  target.BindDeleteMember(new CompatibilityDeleteMemberBinder(_context, Name, IgnoreCase));
+			return Bind(target, new CompatibilityDeleteMemberBinder(_context, Name, IgnoreCase));
+		}
+
+		internal static DynamicMetaObject Bind(DynamicMetaObject target, DeleteMemberBinder binder)
+		{
+			var obj = target.BindDeleteMember(binder);
 			return new DynamicMetaObject(Microsoft.Scripting.Ast.Utils.Try(
 				obj.Expression,
 				Expression.Constant(1L, typeof(object))

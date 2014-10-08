@@ -39,7 +39,7 @@ namespace IronTjs.Runtime
 			lock (_members)
 			{
 				var member = _members[name];
-				var property = member as TjsProperty;
+				var property = member as Property;
 				if (property != null)
 					return property.Value;
 				else
@@ -52,10 +52,10 @@ namespace IronTjs.Runtime
 			lock (_members)
 			{
 				dynamic member;
-				TjsProperty property;
+				Property property;
 				if (!_members.TryGetValue(name, out member))
 					_version++;
-				else if ((property = member as TjsProperty) != null)
+				else if ((property = member as Property) != null)
 					return property.Value = value;
 				return _members[name] = value;
 			}

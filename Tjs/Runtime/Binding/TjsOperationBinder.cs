@@ -59,7 +59,7 @@ namespace IronTjs.Runtime.Binding
 					break;
 				// Unary (Special)
 				case TjsOperationKind.InvokePropertyHandler:
-					if (target.LimitType == typeof(TjsProperty))
+					if (target.LimitType == typeof(Property))
 					{
 						if (args.Length == 0)
 						{
