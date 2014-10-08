@@ -8,6 +8,8 @@ namespace IronTjs.Runtime
 {
 	public interface IContextChangeable
 	{
-		object ChangeContext(object context);
+		object Context { get; }
+
+		IContextChangeable ChangeContext(object context);
 	}
 }

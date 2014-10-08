@@ -24,7 +24,7 @@ namespace IronTjs.Runtime
 
 		public TjsFunction ChangeContext(object context) { return new TjsFunction(_functionBody, context); }
 
-		object IContextChangeable.ChangeContext(object context) { return ChangeContext(context); }
+		IContextChangeable IContextChangeable.ChangeContext(object context) { return ChangeContext(context); }
 
 		public DynamicMetaObject GetMetaObject(Expression parameter) { return new TjsMetaFunction(parameter, BindingRestrictions.GetTypeRestriction(parameter, typeof(TjsFunction)), this); }
 

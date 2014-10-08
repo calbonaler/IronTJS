@@ -20,23 +20,24 @@ namespace IronTjs.Runtime
 
 		public object Context { get; private set; }
 
-		public object GetValue()
+		public object Value
 		{
-			if (_getter == null)
-				throw new InvalidOperationException("プロパティに getter が存在しないため右辺値となることができません。");
-			return _getter(Context, new object[0]);
-		}
-
-		public object SetValue(object value)
-		{
-			if (_setter == null)
-				throw new InvalidOperationException("プロパティに setter が存在しないため左辺値となることができません。");
-			_setter(Context, new[] { value });
-			return value;
+			get
+			{
+				if (_getter == null)
+					throw new InvalidOperationException("プロパティに getter が存在しないため右辺値となることができません。");
+				return _getter(Context, new object[0]);
+			}
+			set
+			{
+				if (_setter == null)
+					throw new InvalidOperationException("プロパティに setter が存在しないため左辺値となることができません。");
+				_setter(Context, new[] { value });
+			}
 		}
 
 		public TjsProperty ChangeContext(object context) { return new TjsProperty(_getter, _setter, context); }
 
-		object IContextChangeable.ChangeContext(object context) { return ChangeContext(context); }
+		IContextChangeable IContextChangeable.ChangeContext(object context) { return ChangeContext(context); }
 	}
 }

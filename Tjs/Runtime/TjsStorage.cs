@@ -41,7 +41,7 @@ namespace IronTjs.Runtime
 				var member = _members[name];
 				var property = member as TjsProperty;
 				if (property != null)
-					return property.GetValue();
+					return property.Value;
 				else
 					return member;
 			}
@@ -56,7 +56,7 @@ namespace IronTjs.Runtime
 				if (!_members.TryGetValue(name, out member))
 					_version++;
 				else if ((property = member as TjsProperty) != null)
-					return property.SetValue(value);
+					return property.Value = value;
 				return _members[name] = value;
 			}
 		}
