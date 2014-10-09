@@ -10,7 +10,7 @@ using MSAst = System.Linq.Expressions;
 
 namespace IronTjs.Compiler.Ast
 {
-	public class FunctionDefinition : Node, INameResolver
+	public class FunctionDefinition : Node, INameResolver, IContextHolder
 	{
 		public FunctionDefinition(string name, IEnumerable<ParameterDefinition> parameters, IEnumerable<Statement> body)
 		{
@@ -24,12 +24,12 @@ namespace IronTjs.Compiler.Ast
 			ReturnLabel = System.Linq.Expressions.Expression.Label(typeof(object));
 		}
 		
-		Dictionary<string, System.Linq.Expressions.ParameterExpression> variables = new Dictionary<string, System.Linq.Expressions.ParameterExpression>();
+		Dictionary<string, System.Linq.Expressions.ParameterExpression> _variables = new Dictionary<string, System.Linq.Expressions.ParameterExpression>();
 		// actual formal parameters 
-		System.Linq.Expressions.ParameterExpression context = System.Linq.Expressions.Expression.Parameter(typeof(object), "__this__");
-		System.Linq.Expressions.ParameterExpression parameters = System.Linq.Expressions.Expression.Parameter(typeof(object[]), "__params__");
+		System.Linq.Expressions.ParameterExpression _context = System.Linq.Expressions.Expression.Parameter(typeof(object), "__this__");
+		System.Linq.Expressions.ParameterExpression _parameters = System.Linq.Expressions.Expression.Parameter(typeof(object[]), "__params__");
 
-		public System.Linq.Expressions.ParameterExpression Context { get { return context; } }
+		public System.Linq.Expressions.Expression Context { get { return _context; } }
 
 		public string Name { get; private set; }
 
@@ -42,43 +42,43 @@ namespace IronTjs.Compiler.Ast
 		public System.Linq.Expressions.Expression ResolveForRead(string name, bool direct)
 		{
 			var param = Parameters.Select(x => x.ParameterVariable).FirstOrDefault(x => x != null && x.Name == name);
-			if (param != null || variables.TryGetValue(name, out param))
+			if (param != null || _variables.TryGetValue(name, out param))
 				return param;
 			else
 				return System.Linq.Expressions.Expression.Dynamic(new ThisProxyMemberAccessBinder(
 					LanguageContext, name, false,
 					direct ? MemberAccessKind.Get | MemberAccessKind.Direct : MemberAccessKind.Get
-				), typeof(object), context, GlobalParent.GlobalObject);
+				), typeof(object), _context, GlobalParent.Context);
 		}
 
 		public System.Linq.Expressions.Expression ResolveForWrite(string name, System.Linq.Expressions.Expression value, bool direct)
 		{
 			var param = Parameters.Select(x => x.ParameterVariable).FirstOrDefault(x => x != null && x.Name == name);
-			if (param != null || variables.TryGetValue(name, out param))
+			if (param != null || _variables.TryGetValue(name, out param))
 				return System.Linq.Expressions.Expression.Assign(param, value);
 			else
 				return System.Linq.Expressions.Expression.Dynamic(new ThisProxyMemberAccessBinder(
 					LanguageContext, name, false,
 					direct ? MemberAccessKind.Set | MemberAccessKind.Direct : MemberAccessKind.Set
-				), typeof(object), context, GlobalParent.GlobalObject, value);
+				), typeof(object), _context, GlobalParent.Context, value);
 		}
 
 		public MSAst.Expression ResolveForDelete(string name)
 		{
 			var param = Parameters.Select(x => x.ParameterVariable).FirstOrDefault(x => x != null && x.Name == name);
-			if (param != null || variables.TryGetValue(name, out param))
+			if (param != null || _variables.TryGetValue(name, out param))
 				return System.Linq.Expressions.Expression.Constant(0L);
 			else
 				return System.Linq.Expressions.Expression.Dynamic(new ThisProxyMemberAccessBinder(
 					LanguageContext, name, false, MemberAccessKind.Delete
-				), typeof(object), context, GlobalParent.GlobalObject);
+				), typeof(object), _context, GlobalParent.Context);
 		}
 
 		public System.Linq.Expressions.Expression DeclareVariable(string name, System.Linq.Expressions.Expression value)
 		{
 			System.Linq.Expressions.ParameterExpression param;
-			if (!variables.TryGetValue(name, out param))
-				variables[name] = param = System.Linq.Expressions.Expression.Variable(typeof(object), name);
+			if (!_variables.TryGetValue(name, out param))
+				_variables[name] = param = System.Linq.Expressions.Expression.Variable(typeof(object), name);
 			return System.Linq.Expressions.Expression.Assign(param, value);
 		}
 
@@ -96,14 +96,14 @@ namespace IronTjs.Compiler.Ast
 			List<MSAst.Expression> body = new List<MSAst.Expression>();
 			for (int i = 0; i < Parameters.Count; i++)
 			{
-				MSAst.Expression exp = MSAst.Expression.ArrayAccess(parameters, MSAst.Expression.Constant(i));
+				MSAst.Expression exp = MSAst.Expression.ArrayAccess(_parameters, MSAst.Expression.Constant(i));
 				if (Parameters[i].HasDefaultValue)
 					exp = MSAst.Expression.Condition(MSAst.Expression.TypeEqual(exp, typeof(IronTjs.Builtins.TjsVoid)),
 						MSAst.Expression.Constant(Parameters[i].DefaultValue, typeof(object)),
 						exp
 					);
 				body.Add(MSAst.Expression.Assign(Parameters[i].ParameterVariable,
-					MSAst.Expression.Condition(MSAst.Expression.LessThan(MSAst.Expression.Constant(i), MSAst.Expression.Property(parameters, "Length")),
+					MSAst.Expression.Condition(MSAst.Expression.LessThan(MSAst.Expression.Constant(i), MSAst.Expression.Property(_parameters, "Length")),
 						exp,
 						MSAst.Expression.Constant(Parameters[i].HasDefaultValue ? Parameters[i].DefaultValue : IronTjs.Builtins.TjsVoid.Value, typeof(object))
 					)
@@ -114,17 +114,22 @@ namespace IronTjs.Compiler.Ast
 				body.Add(statement.Transform());
 			}
 			body.Add(MSAst.Expression.Label(ReturnLabel, MSAst.Expression.Constant(IronTjs.Builtins.TjsVoid.Value)));
-			return MSAst.Expression.Lambda<Func<object, object[], object>>(MSAst.Expression.Block(variables.Values.Concat(Parameters.Select(x => x.ParameterVariable)), body), Name, new[] { context, parameters });
+			return MSAst.Expression.Lambda<Func<object, object[], object>>(MSAst.Expression.Block(_variables.Values.Concat(Parameters.Select(x => x.ParameterVariable)), body), Name, new[] { _context, _parameters });
+		}
+
+		public System.Linq.Expressions.Expression TransformFunction(System.Linq.Expressions.Expression context)
+		{
+			var lambda = TransformLambda();
+			return MSAst.Expression.New(typeof(IronTjs.Runtime.Function).GetConstructor(new[] { typeof(Func<object, object[], object>), typeof(object) }),
+				lambda,
+				context
+			);
 		}
 
 		public System.Linq.Expressions.Expression Register(System.Linq.Expressions.Expression registeredTo)
 		{
-			var lambda = TransformLambda();
 			return MSAst.Expression.Dynamic(LanguageContext.CreateSetMemberBinder(Name, false, true, true), typeof(object), registeredTo,
-				MSAst.Expression.New(typeof(IronTjs.Runtime.Function).GetConstructor(new[] { typeof(Func<object, object[], object>), typeof(object) }),
-					lambda,
-					registeredTo
-				)
+				TransformFunction(registeredTo)
 			);
 		}
 	}

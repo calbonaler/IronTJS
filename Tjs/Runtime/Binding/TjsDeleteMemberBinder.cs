@@ -42,13 +42,13 @@ namespace IronTjs.Runtime.Binding
 
 	class CompatibilityDeleteMemberBinder : DeleteMemberBinder
 	{
-		public CompatibilityDeleteMemberBinder(TjsContext context, string name, bool ignoreCase) : base(name, ignoreCase) { _context = context; }
+		public CompatibilityDeleteMemberBinder(TjsContext context, string name, bool ignoreCase) : base(name, ignoreCase) { Context = context; }
 
-		readonly TjsContext _context;
+		public TjsContext Context { get; private set; }
 
 		public override DynamicMetaObject FallbackDeleteMember(DynamicMetaObject target, DynamicMetaObject errorSuggestion)
 		{
-			return _context.Binder.DeleteMember(Name, target, new TjsOverloadResolverFactory(_context.Binder), errorSuggestion);
+			return Context.Binder.DeleteMember(Name, target, new TjsOverloadResolverFactory(Context.Binder), errorSuggestion);
 		}
 	}
 }

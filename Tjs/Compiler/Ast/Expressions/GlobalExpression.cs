@@ -8,13 +8,7 @@ namespace IronTjs.Compiler.Ast
 {
 	public class GlobalExpression : Expression
 	{
-		public override System.Linq.Expressions.Expression TransformRead()
-		{
-			Node node = this;
-			while (node.Parent != null)
-				node = node.Parent;
-			return ((SourceUnitTree)node).GlobalObject;
-		}
+		public override System.Linq.Expressions.Expression TransformRead() { return GlobalParent.Context; }
 
 		public override System.Linq.Expressions.Expression TransformWrite(System.Linq.Expressions.Expression value) { throw new InvalidOperationException("global を左辺値とすることはできません。"); }
 

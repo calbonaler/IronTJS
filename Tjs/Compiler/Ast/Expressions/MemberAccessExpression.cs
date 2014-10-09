@@ -35,7 +35,7 @@ namespace IronTjs.Compiler.Ast
 						return with.AccessibleVariable;
 					node = node.Parent;
 				}
-				return ((SourceUnitTree)node).GlobalObject;
+				return ((SourceUnitTree)node).Context;
 			}
 		}
 

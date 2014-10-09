@@ -14,9 +14,9 @@ namespace IronTjs.Runtime
 		public TjsScopeExtension(Scope scope) : base(scope)
 		{
 			Debug.Assert(scope.Storage is ScopeStorage);
-			GlobalObject = new TjsStorage(((ScopeStorage)scope.Storage).GetItems());
+			GlobalObject = new TjsScopeStorage(((ScopeStorage)scope.Storage).GetItems());
 		}
 
-		public TjsStorage GlobalObject { get; private set; }
+		public TjsScopeStorage GlobalObject { get; private set; }
 	}
 }

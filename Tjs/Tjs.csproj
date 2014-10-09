@@ -51,6 +51,7 @@
   <ItemGroup>
     <Compile Include="Builtins\TjsString.cs" />
     <Compile Include="Builtins\TjsVoid.cs" />
+    <Compile Include="Compiler\Ast\IContextHolder.cs" />
     <Compile Include="Compiler\Ast\Statements\Block.cs" />
     <Compile Include="Compiler\Ast\ClassDefinition.cs" />
     <Compile Include="Compiler\Ast\Expressions\ConditionalExpression.cs" />
@@ -107,13 +108,15 @@
     <Compile Include="Runtime\Binding\TjsSetIndexBinder.cs" />
     <Compile Include="Runtime\Binding\TjsSetMemberBinder.cs" />
     <Compile Include="Runtime\Binding\TjsUnaryOperationBinder.cs" />
+    <Compile Include="Runtime\Class.cs" />
+    <Compile Include="Runtime\DynamicStorage.cs" />
     <Compile Include="Runtime\IContextChangeable.cs" />
     <Compile Include="Runtime\TjsContext.cs" />
     <Compile Include="Runtime\Function.cs" />
     <Compile Include="Runtime\Property.cs" />
     <Compile Include="Runtime\TjsScopeExtension.cs" />
     <Compile Include="Runtime\TjsScriptCode.cs" />
-    <Compile Include="Runtime\TjsStorage.cs" />
+    <Compile Include="Runtime\TjsScopeStorage.cs" />
     <Compile Include="Utils.cs" />
   </ItemGroup>
   <ItemGroup />

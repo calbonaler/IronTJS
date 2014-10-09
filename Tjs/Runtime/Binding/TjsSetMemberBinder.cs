@@ -13,12 +13,12 @@ namespace IronTjs.Runtime.Binding
 	{
 		public TjsSetMemberBinder(TjsContext context, string name, bool ignoreCase, bool forceCreate, bool direct) : base(name, ignoreCase)
 		{
-			_context = context;
+			Context = context;
 			ForceCreate = forceCreate;
 			DirectAccess = direct;
 		}
 
-		readonly TjsContext _context;
+		public TjsContext Context { get; private set; }
 
 		public bool ForceCreate { get; private set; }
 
@@ -26,7 +26,7 @@ namespace IronTjs.Runtime.Binding
 
 		public override DynamicMetaObject FallbackSetMember(DynamicMetaObject target, DynamicMetaObject value, DynamicMetaObject errorSuggestion)
 		{
-			var result = _context.Binder.SetMember(Name, target, value, errorSuggestion, new TjsOverloadResolverFactory(_context.Binder));
+			var result = Context.Binder.SetMember(Name, target, value, errorSuggestion, new TjsOverloadResolverFactory(Context.Binder));
 			if (result.Expression.Type.IsValueType)
 				result = new DynamicMetaObject(AstUtils.Convert(result.Expression, typeof(object)), result.Restrictions);
 			return result;

@@ -43,60 +43,49 @@ namespace IronTjs.Runtime.Binding
 			}
 		}
 
-		class GetMemberBinderImpl : GetMemberBinder
+		class GetMemberBinderImpl : TjsGetMemberBinder
 		{
-			public GetMemberBinderImpl(TjsContext context, string name, bool ignoreCase, bool direct, DynamicMetaObject fallback) : base(name, ignoreCase)
+			public GetMemberBinderImpl(TjsContext context, string name, bool ignoreCase, bool direct, DynamicMetaObject fallback) : base(context, name, ignoreCase, direct)
 			{
-				_context = context;
-				_direct = direct;
 				_fallback = fallback;
 			}
 
-			readonly TjsContext _context;
-			readonly bool _direct;
 			readonly DynamicMetaObject _fallback;
 
 			public override DynamicMetaObject FallbackGetMember(DynamicMetaObject target, DynamicMetaObject errorSuggestion)
 			{
-				return _fallback.BindGetMember(_context.CreateGetMemberBinder(Name, IgnoreCase, _direct));
+				return base.FallbackGetMember(target, _fallback.BindGetMember(Context.CreateGetMemberBinder(Name, IgnoreCase, DirectAccess)));
 			}
 		}
 
-		class SetMemberBinderImpl : SetMemberBinder
+		class SetMemberBinderImpl : TjsSetMemberBinder
 		{
-			public SetMemberBinderImpl(TjsContext context, string name, bool ignoreCase, bool forceCreate, bool direct, DynamicMetaObject fallback) : base(name, ignoreCase)
+			public SetMemberBinderImpl(TjsContext context, string name, bool ignoreCase, bool forceCreate, bool direct, DynamicMetaObject fallback)
+				: base(context, name, ignoreCase, forceCreate, direct)
 			{
-				_context = context;
-				_forceCreate = forceCreate;
-				_direct = direct;
 				_fallback = fallback;
 			}
 
-			readonly TjsContext _context;
-			readonly bool _forceCreate;
-			readonly bool _direct;
 			readonly DynamicMetaObject _fallback;
 
 			public override DynamicMetaObject FallbackSetMember(DynamicMetaObject target, DynamicMetaObject value, DynamicMetaObject errorSuggestion)
 			{
-				return _fallback.BindSetMember(_context.CreateSetMemberBinder(Name, IgnoreCase, _forceCreate, _direct), value);
+				return base.FallbackSetMember(target, value, _fallback.BindSetMember(Context.CreateSetMemberBinder(Name, IgnoreCase, ForceCreate, DirectAccess), value));
 			}
 		}
 
-		class DeleteMemberBinderImpl : DeleteMemberBinder
+		class DeleteMemberBinderImpl : CompatibilityDeleteMemberBinder
 		{
-			public DeleteMemberBinderImpl(TjsContext context, string name, bool ignoreCase, DynamicMetaObject fallback) : base(name, ignoreCase)
+			public DeleteMemberBinderImpl(TjsContext context, string name, bool ignoreCase, DynamicMetaObject fallback) : base(context, name, ignoreCase)
 			{
-				_context = context;
 				_fallback = fallback;
 			}
 
-			readonly TjsContext _context;
 			readonly DynamicMetaObject _fallback;
 
 			public override DynamicMetaObject FallbackDeleteMember(DynamicMetaObject target, DynamicMetaObject errorSuggestion)
 			{
-				return TjsDeleteMemberBinder.Bind(_fallback, new CompatibilityDeleteMemberBinder(_context, Name, IgnoreCase));
+				return base.FallbackDeleteMember(target, _fallback.BindDeleteMember(new CompatibilityDeleteMemberBinder(Context, Name, IgnoreCase)));
 			}
 		}
 	}

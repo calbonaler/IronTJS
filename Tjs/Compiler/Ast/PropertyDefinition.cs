@@ -26,7 +26,7 @@ namespace IronTjs.Compiler.Ast
 
 		public FunctionDefinition Setter { get; private set; }
 
-		public System.Linq.Expressions.Expression Register(System.Linq.Expressions.Expression registeredTo)
+		public System.Linq.Expressions.Expression TransformProperty(System.Linq.Expressions.Expression context)
 		{
 			MSAst.Expression getter;
 			if (Getter != null)
@@ -38,13 +38,16 @@ namespace IronTjs.Compiler.Ast
 				setter = Setter.TransformLambda();
 			else
 				setter = MSAst.Expression.Constant(null, typeof(Func<object, object[], object>));
-			return MSAst.Expression.Dynamic(LanguageContext.CreateSetMemberBinder(Name, false, true, true), typeof(object), registeredTo,
-				MSAst.Expression.New(typeof(IronTjs.Runtime.Property).GetConstructor(new[] { typeof(Func<object, object[], object>), typeof(Func<object, object[], object>), typeof(object) }),
-					getter,
-					setter,
-					registeredTo
-				)
+			return MSAst.Expression.New(typeof(IronTjs.Runtime.Property).GetConstructor(new[] { typeof(Func<object, object[], object>), typeof(Func<object, object[], object>), typeof(object) }),
+				getter,
+				setter,
+				context
 			);
+		}
+
+		public System.Linq.Expressions.Expression Register(System.Linq.Expressions.Expression registeredTo)
+		{
+			return MSAst.Expression.Dynamic(LanguageContext.CreateSetMemberBinder(Name, false, true, true), typeof(object), registeredTo, TransformProperty(registeredTo));
 		}
 	}
 }
