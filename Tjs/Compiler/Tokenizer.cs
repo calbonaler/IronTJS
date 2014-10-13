@@ -29,11 +29,13 @@ namespace IronTjs.Compiler
 		public Token Read()
 		{
 			var token = _nextToken;
+			// ソースコード解析のための整形 (改行、空白、コメントの除去)
+			int commentLevel = 0;
 			do
 			{
-				if (_line == null)
+				if (_line == null) // すでに行がなければ最後のトークンを返し続ける
 					return token;
-				if (_columnIndex >= _line.Length)
+				if (_columnIndex >= _line.Length) // 行終わりなので次の行を読む
 				{
 					_baseLocation = new SourceLocation(_baseLocation.Index + _line.Length, _baseLocation.Line + 1, 1);
 					_line = _reader.ReadLine();
@@ -44,51 +46,68 @@ namespace IronTjs.Compiler
 					}
 					_columnIndex = 0;
 				}
-				while (_columnIndex < _line.Length && char.IsWhiteSpace(_line[_columnIndex]))
+				while (_columnIndex < _line.Length && char.IsWhiteSpace(_line[_columnIndex])) // 先頭の空白を飛ばす
 					_columnIndex++;
-				if (_columnIndex < _line.Length && _line.IndexOf("//", _columnIndex) == _columnIndex)
+				if (commentLevel == 1)
+					commentLevel = 0;
+				if (_columnIndex < _line.Length)
 				{
-					_columnIndex += 2;
-					while (_columnIndex < _line.Length)
-						_columnIndex++;
+					if (_line.IndexOf("/*", _columnIndex) == _columnIndex) // 複数行コメント開始
+					{
+						_columnIndex += 2;
+						if (commentLevel++ == 0)
+							commentLevel++;
+					}
+					else if (commentLevel > 0) // コメント中
+					{
+						if (_line.IndexOf("*/", _columnIndex) == _columnIndex) // 複数行コメント終了
+						{
+							_columnIndex += 2;
+							--commentLevel;
+						}
+						else // その他
+							_columnIndex++;
+					}
+					else if (_line.IndexOf("//", _columnIndex) == _columnIndex) // 単一行コメントを飛ばす
+						_columnIndex = _line.Length;
 				}
-			} while (_columnIndex >= _line.Length);
+			} while (_columnIndex >= _line.Length || commentLevel > 0);
 			var start = CurrentPosition;
-			if (char.IsLetter(_line[_columnIndex]) || _line[_columnIndex] == '_')
+			if (char.IsLetter(_line[_columnIndex]) || _line[_columnIndex] == '_') // 識別子 or キーワード
 			{
 				StringBuilder sb = new StringBuilder();
 				while (_columnIndex < _line.Length && (char.IsLetterOrDigit(_line[_columnIndex]) || _line[_columnIndex] == '_'))
 					sb.Append(_line[_columnIndex++]);
 				_nextToken = new Token(Token.GetTokenTypeForWord(sb.ToString()), sb.ToString(), new SourceSpan(start, CurrentPosition));
 			}
-			else if (char.IsDigit(_line[_columnIndex]))
+			else if (char.IsDigit(_line[_columnIndex])) // 数値リテラル
 			{
 				int baseN = 10;
 				long value = 0;
-				if (_line[_columnIndex] == '0')
+				if (_line[_columnIndex] == '0') // 10進数以外の数値リテラルプレフィックスの解析
 				{
 					_columnIndex++;
 					if (_columnIndex < _line.Length)
 					{
-						if (_line[_columnIndex] == 'x' || _line[_columnIndex] == 'X')
+						if (_line[_columnIndex] == 'x' || _line[_columnIndex] == 'X') // 16進数
 						{
 							_columnIndex++;
 							baseN = 16;
 						}
-						else if (_line[_columnIndex] == 'b' || _line[_columnIndex] == 'B')
+						else if (_line[_columnIndex] == 'b' || _line[_columnIndex] == 'B') // 2進数
 						{
 							_columnIndex++;
 							baseN = 2;
 						}
-						else if (IsBaseNDigit(_line[_columnIndex], 8))
+						else if (IsBaseNDigit(_line[_columnIndex], 8)) // 8進数
 							baseN = 8;
 					}
 				}
-				while (_columnIndex < _line.Length && IsBaseNDigit(_line[_columnIndex], baseN))
+				while (_columnIndex < _line.Length && IsBaseNDigit(_line[_columnIndex], baseN)) // 整数部分
 					value = value * baseN + ConvertBaseNDigit(_line[_columnIndex++]);
 				long fraction = 0;
 				long divisor = 1;
-				if (_columnIndex < _line.Length && _line[_columnIndex] == '.')
+				if (_columnIndex < _line.Length && _line[_columnIndex] == '.') // 小数部分
 				{
 					_columnIndex++;
 					while (_columnIndex < _line.Length && IsBaseNDigit(_line[_columnIndex], baseN))
@@ -99,14 +118,14 @@ namespace IronTjs.Compiler
 				}
 				long exponent = 0;
 				long expBase = 0;
-				if (_columnIndex < _line.Length)
+				if (_columnIndex < _line.Length) // 指数部
 				{
-					if (_line[_columnIndex] == 'e' || _line[_columnIndex] == 'E')
+					if (_line[_columnIndex] == 'e' || _line[_columnIndex] == 'E') // 10を底とする指数表現
 					{
 						_columnIndex++;
 						expBase = 10;
 					}
-					else if (_line[_columnIndex] == 'p' || _line[_columnIndex] == 'P')
+					else if (_line[_columnIndex] == 'p' || _line[_columnIndex] == 'P') // 2を底とする指数表現
 					{
 						_columnIndex++;
 						expBase = 2;
@@ -132,7 +151,7 @@ namespace IronTjs.Compiler
 				else
 					_nextToken = new Token(TokenType.LiteralInteger, value, new SourceSpan(start, CurrentPosition));
 			}
-			else if (_line[_columnIndex] == '"' || _line[_columnIndex] == '\'')
+			else if (_line[_columnIndex] == '"' || _line[_columnIndex] == '\'') // 文字列リテラル (連続文字列の連結はパーサーで)
 			{
 				var quote = _line[_columnIndex++];
 				StringBuilder sb = new StringBuilder();
@@ -193,7 +212,7 @@ namespace IronTjs.Compiler
 						sb.Append(ch);
 				}
 			}
-			else
+			else // 記号類 (演算子、セパレータなど)
 			{
 				StringBuilder sb = new StringBuilder();
 				string completeSymbol = null;
@@ -209,10 +228,10 @@ namespace IronTjs.Compiler
 				}
 				if (completeSymbol != null)
 				{
-					_columnIndex = index;
+					_columnIndex = index; // 最長で解析できた場所にカーソルを戻す
 					_nextToken = new Token(Token.GetTokenTypeForSymbol(completeSymbol), completeSymbol, new SourceSpan(start, CurrentPosition));
 				}
-				else
+				else // ダメなら全部で1トークン
 					_nextToken = new Token(TokenType.Unknown, sb.ToString(), new SourceSpan(start, CurrentPosition));
 			}
 			return token;

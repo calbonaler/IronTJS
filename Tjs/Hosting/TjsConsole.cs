@@ -143,6 +143,7 @@ namespace IronTjs.Hosting
 						case TokenType.KeywordOctet:
 						case TokenType.KeywordReal:
 						case TokenType.KeywordString:
+						case TokenType.KeywordVar:
 							color = ConsoleColor.Green;
 							break;
 						case TokenType.KeywordBreak:
@@ -176,7 +177,6 @@ namespace IronTjs.Hosting
 						case TokenType.KeywordThrow:
 						case TokenType.KeywordTry:
 						case TokenType.KeywordTypeOf:
-						case TokenType.KeywordVar:
 						case TokenType.KeywordWhile:
 						case TokenType.KeywordWith:
 							color = ConsoleColor.Yellow;
@@ -191,6 +191,9 @@ namespace IronTjs.Hosting
 						case TokenType.LiteralReal:
 						case TokenType.LiteralString:
 							color = ConsoleColor.Magenta;
+							break;
+						case TokenType.Unknown:
+							color = ConsoleColor.Red;
 							break;
 						default:
 							color = ConsoleColor.White;
