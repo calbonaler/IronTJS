@@ -37,6 +37,8 @@ namespace IronTjs.Runtime
 
 		public TjsBinder Binder { get; private set; }
 
+		public override CreateInstanceBinder CreateCreateBinder(CallInfo callInfo) { return new TjsCreateInstanceBinder(this, callInfo); }
+
 		public override ConvertBinder CreateConvertBinder(Type toType, bool? explicitCast) { return new TjsConvertBinder(this, toType, explicitCast ?? true); }
 
 		public override InvokeBinder CreateInvokeBinder(CallInfo callInfo) { return new TjsInvokeBinder(this, callInfo); }

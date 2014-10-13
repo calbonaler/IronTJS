@@ -97,6 +97,7 @@
     <Compile Include="Runtime\Binding\TjsBinaryOperationBinder.cs" />
     <Compile Include="Runtime\Binding\TjsBinder.cs" />
     <Compile Include="Runtime\Binding\TjsConvertBinder.cs" />
+    <Compile Include="Runtime\Binding\TjsCreateInstanceBinder.cs" />
     <Compile Include="Runtime\Binding\TjsDeleteIndexBinder.cs" />
     <Compile Include="Runtime\Binding\TjsDeleteMemberBinder.cs" />
     <Compile Include="Runtime\Binding\TjsGetIndexBinder.cs" />
@@ -111,6 +112,7 @@
     <Compile Include="Runtime\Class.cs" />
     <Compile Include="Runtime\DynamicStorage.cs" />
     <Compile Include="Runtime\IContextChangeable.cs" />
+    <Compile Include="Runtime\Instance.cs" />
     <Compile Include="Runtime\TjsContext.cs" />
     <Compile Include="Runtime\Function.cs" />
     <Compile Include="Runtime\Property.cs" />

@@ -14,7 +14,7 @@ namespace IronTjs.Runtime
 {
 	public class Class : DynamicStorage
 	{
-		public Class(string name, IEnumerable<Class> baseClasses, IEnumerable<KeyValuePair<string, object>> members, IEnumerable<KeyValuePair<string, Func<object, object>>> fields)
+		public Class(string name, IEnumerable<Func<Class>> baseClasses, IEnumerable<KeyValuePair<string, object>> members, IEnumerable<KeyValuePair<string, Func<object, object>>> fields)
 		{
 			Name = name;
 			BaseClasses = baseClasses.ToReadOnly();
@@ -24,7 +24,7 @@ namespace IronTjs.Runtime
 
 		public string Name { get; private set; }
 
-		public ReadOnlyCollection<Class> BaseClasses { get; private set; }
+		public ReadOnlyCollection<Func<Class>> BaseClasses { get; private set; }
 
 		public Dictionary<string, object> Members { get; private set; }
 
@@ -45,9 +45,9 @@ namespace IronTjs.Runtime
 					}
 					return true;
 				}
-				foreach (var baseClass in BaseClasses)
+				foreach (var baseClass in BaseClasses.Reverse())
 				{
-					if (baseClass.TryGetValue(key, direct, out member))
+					if (baseClass().TryGetValue(key, direct, out member))
 						return true;
 				}
 			}
@@ -93,6 +93,12 @@ namespace IronTjs.Runtime
 			return false;
 		}
 
-		protected override IEnumerable<string> GetMemberNames() { return Members.Keys.Concat(BaseClasses.SelectMany(x => x.GetMemberNames())).Distinct(); }
+		protected override bool TryCreateInstance(object[] args, out object result)
+		{
+			result = new Instance(this, args);
+			return true;
+		}
+
+		protected override IEnumerable<string> GetMemberNames() { return Members.Keys.Concat(BaseClasses.SelectMany(x => x().GetMemberNames())).Distinct(); }
 	}
 }

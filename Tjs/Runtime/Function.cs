@@ -26,11 +26,11 @@ namespace IronTjs.Runtime
 
 		IContextChangeable IContextChangeable.ChangeContext(object context) { return ChangeContext(context); }
 
-		public DynamicMetaObject GetMetaObject(Expression parameter) { return new TjsMetaFunction(parameter, BindingRestrictions.GetTypeRestriction(parameter, typeof(Function)), this); }
+		public DynamicMetaObject GetMetaObject(Expression parameter) { return new Meta(parameter, BindingRestrictions.GetTypeRestriction(parameter, typeof(Function)), this); }
 
-		class TjsMetaFunction : DynamicMetaObject
+		class Meta : DynamicMetaObject
 		{
-			public TjsMetaFunction(Expression expression, BindingRestrictions restrictions, Function value) : base(expression, restrictions, value) { }
+			public Meta(Expression expression, BindingRestrictions restrictions, Function value) : base(expression, restrictions, value) { }
 
 			public override DynamicMetaObject BindInvoke(InvokeBinder binder, DynamicMetaObject[] args)
 			{

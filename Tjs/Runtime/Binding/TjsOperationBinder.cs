@@ -40,7 +40,6 @@ namespace IronTjs.Runtime.Binding
 				case TjsOperationKind.Evaluate:
 				case TjsOperationKind.Invalidate:
 				case TjsOperationKind.IsValid:
-				case TjsOperationKind.New:
 					break;
 				case TjsOperationKind.TypeOf:
 					if (target.RuntimeType == null)
@@ -63,12 +62,12 @@ namespace IronTjs.Runtime.Binding
 					{
 						if (args.Length == 0)
 						{
-							exp = Expression.Call(convertedTarget, "GetValue", null);
+							exp = Expression.Property(convertedTarget, (System.Reflection.PropertyInfo)Utils.GetMember<Property>(x => x.Value));
 							usedArgs = 1;
 						}
 						else if (args.Length == 1)
 						{
-							exp = Expression.Call(convertedTarget, "SetValue", null, args[0].Expression);
+							exp = Expression.Assign(Expression.Property(convertedTarget, (System.Reflection.PropertyInfo)Utils.GetMember<Property>(x => x.Value)), args[0].Expression);
 							usedArgs = 2;
 						}
 						else

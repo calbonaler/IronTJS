@@ -50,13 +50,16 @@ namespace IronTjs.Compiler.Ast
 		public System.Linq.Expressions.Expression TransformClass()
 		{
 			var defaultContext = MSAst.Constant(null);
+			var classFinders = new List<MSAst>();
+			foreach (var baseClass in BaseClasses)
+				classFinders.Add(MSAst.Lambda<Func<Class>>(MSAst.Convert(MSAst.Dynamic(GlobalParent.LanguageContext.CreateGetMemberBinder(baseClass, false), typeof(object), GlobalParent.Context), typeof(Class))));
 			var members = new Dictionary<string, MSAst>();
 			foreach (var func in Functions)
 				members[func.Name] = func.TransformFunction(defaultContext);
 			foreach (var prop in Properties)
 				members[prop.Name] = prop.TransformProperty(defaultContext);
 			var membersArg = MSAst.Call(
-				new Func<IEnumerable<string>, IEnumerable<object>, Func<string, object, KeyValuePair<string, object>>, IEnumerable<KeyValuePair<string, object>>>(Enumerable.Zip<string, object, KeyValuePair<string, object>>).Method,
+				(System.Reflection.MethodInfo)Utils.GetMember(() => Enumerable.Zip<string, object, KeyValuePair<string, object>>(null, null, null)),
 				MSAst.Constant(members.Keys),
 				MSAst.NewArrayInit(typeof(object), members.Values),
 				(System.Linq.Expressions.Expression<Func<string, object, KeyValuePair<string, object>>>)((x, y) => new KeyValuePair<string, object>(x, y))
@@ -67,13 +70,13 @@ namespace IronTjs.Compiler.Ast
 				foreach (var initializer in vd.Initializers)
 				{
 					if (initializer.Value != null)
-						fields[initializer.Key] = System.Linq.Expressions.Expression.Lambda<Func<object, object>>(initializer.Value.TransformRead(), _context);
+						fields[initializer.Key] = MSAst.Lambda<Func<object, object>>(initializer.Value.TransformRead(), _context);
 					else
-						fields[initializer.Key] = System.Linq.Expressions.Expression.Lambda<Func<object, object>>(System.Linq.Expressions.Expression.Constant(Builtins.TjsVoid.Value), _context);
+						fields[initializer.Key] = MSAst.Lambda<Func<object, object>>(MSAst.Constant(Builtins.TjsVoid.Value), _context);
 				}
 			}
 			var fieldsArg = MSAst.Call(
-				new Func<IEnumerable<string>, IEnumerable<Func<object, object>>, Func<string, object, KeyValuePair<string, Func<object, object>>>, IEnumerable<KeyValuePair<string, Func<object, object>>>>(Enumerable.Zip<string, Func<object, object>, KeyValuePair<string, Func<object, object>>>).Method,
+				(System.Reflection.MethodInfo)Utils.GetMember(() => Enumerable.Zip<string, Func<object, object>, KeyValuePair<string, Func<object, object>>>(null, null, null)),
 				MSAst.Constant(fields.Keys),
 				MSAst.NewArrayInit(typeof(Func<object, object>), fields.Values),
 				(System.Linq.Expressions.Expression<Func<string, Func<object, object>, KeyValuePair<string, Func<object, object>>>>)((x, y) => new KeyValuePair<string, Func<object, object>>(x, y))
@@ -81,11 +84,11 @@ namespace IronTjs.Compiler.Ast
 			var ctor = typeof(Class).GetConstructor(new[]
 			{
 				typeof(string),
-				typeof(IEnumerable<Class>),
+				typeof(IEnumerable<Func<Class>>),
 				typeof(IEnumerable<KeyValuePair<string, object>>),
 				typeof(IEnumerable<KeyValuePair<string, Func<object, object>>>)
 			});
-			return MSAst.New(ctor, MSAst.Constant(Name), MSAst.Constant(Enumerable.Empty<Class>()), membersArg, fieldsArg);
+			return MSAst.New(ctor, MSAst.Constant(Name), MSAst.NewArrayInit(typeof(Func<Class>), classFinders), membersArg, fieldsArg);
 		}
 
 		public System.Linq.Expressions.Expression Register(System.Linq.Expressions.Expression registeredTo)

@@ -22,6 +22,18 @@ namespace IronTjs.Compiler.Ast
 
 		public override System.Linq.Expressions.Expression TransformRead()
 		{
+			if (ExpressionType == TjsOperationKind.New)
+			{
+				var ie = Operand as InvokeExpression;
+				if (ie != null)
+					return System.Linq.Expressions.Expression.Dynamic(
+						LanguageContext.CreateCreateBinder(new System.Dynamic.CallInfo(ie.Arguments.Count)),
+						typeof(object),
+						Microsoft.Scripting.Utils.ArrayUtils.Insert(ie.Target.TransformRead(), ie.Arguments.Select(x => x.TransformRead()).ToArray())
+					);
+				else
+					throw new InvalidOperationException("new 演算子を適用できるのは関数呼び出しのみです。");
+			}
 			if (ExpressionType == TjsOperationKind.Delete)
 				return Operand.TransformDelete();
 			if (ExpressionType == TjsOperationKind.AccessPropertyObject)

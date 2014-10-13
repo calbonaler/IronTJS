@@ -26,6 +26,12 @@ namespace IronTjs.Runtime
 
 		protected virtual bool TryDeleteValue(object key) { return false; }
 
+		protected virtual bool TryCreateInstance(object[] args, out object result)
+		{
+			result = null;
+			return false;
+		}
+
 		protected virtual IEnumerable<string> GetMemberNames() { return Enumerable.Empty<string>(); }
 
 		public DynamicMetaObject GetMetaObject(Expression parameter) { return new Meta(parameter, BindingRestrictions.GetTypeRestriction(parameter, GetType()), this); }
@@ -75,7 +81,8 @@ namespace IronTjs.Runtime
 						Expression.Call(
 							LimitedInstance, 
 							(MethodInfo)Utils.GetMember<object>(x => Value.TryGetValue(null, false, out x)),
-							Expression.Constant(key), Expression.Constant(accessible != null && accessible.DirectAccess), v),
+							Expression.Constant(key), Expression.Constant(accessible != null && accessible.DirectAccess), v
+						),
 						v,
 						fallback().Expression
 					)
@@ -134,6 +141,23 @@ namespace IronTjs.Runtime
 			public override DynamicMetaObject BindSetMember(SetMemberBinder binder, DynamicMetaObject value)
 			{
 				return BindSetMember(binder.Name, value.Expression, binder, BindingRestrictions.Empty, () => base.BindSetMember(binder, value));
+			}
+
+			public override DynamicMetaObject BindCreateInstance(CreateInstanceBinder binder, DynamicMetaObject[] args)
+			{
+				var v = Expression.Variable(typeof(object));
+				var exp = Expression.Block(new[] { v },
+					Expression.Condition(
+						Expression.Call(
+							LimitedInstance,
+							(MethodInfo)Utils.GetMember<object>(x => Value.TryCreateInstance(null, out x)),
+							Expression.NewArrayInit(typeof(object), args.Select(x => Expression.Convert(x.Expression, typeof(object)))), v
+						),
+						v,
+						base.BindCreateInstance(binder, args).Expression
+					)
+				);
+				return Restrict(exp, binder, BindingRestrictions.Empty);
 			}
 
 			public override IEnumerable<string> GetDynamicMemberNames() { return Value.GetMemberNames(); }
