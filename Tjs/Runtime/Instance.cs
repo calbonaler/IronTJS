@@ -105,6 +105,12 @@ namespace IronTjs.Runtime
 			return false;
 		}
 
+		protected override bool TryCheckInstance(string className, out bool result)
+		{
+			result = string.Equals(Type.Name, className, StringComparison.Ordinal);
+			return true;
+		}
+
 		protected override IEnumerable<string> GetMemberNames() { return Members.Keys; }
 
 		public override string ToString() { return Type.Name; }
