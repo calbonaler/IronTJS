@@ -13,33 +13,43 @@ namespace IronTjs.Runtime.Binding
 	{
 		public TjsOperationBinder(TjsContext context, TjsOperationKind operation)
 		{
-			_context = context;
-			_operation = operation;
+			Context = context;
+			OperationKind = operation;
 		}
 
-		readonly TjsContext _context;
-		readonly TjsOperationKind _operation;
+		public TjsContext Context { get; private set; }
+
+		public TjsOperationKind OperationKind { get; private set; }
 
 		public override DynamicMetaObject Bind(DynamicMetaObject target, DynamicMetaObject[] args)
+		{
+			var ito = target as ITjsOperable;
+			if (ito != null)
+				return ito.BindOperation(this, args);
+			else
+				return FallbackOperation(target, args, null);
+		}
+
+		public DynamicMetaObject FallbackOperation(DynamicMetaObject target, DynamicMetaObject[] args, DynamicMetaObject errorSuggestion)
 		{
 			Expression convertedTarget = Expression.Convert(target.Expression, target.LimitType);
 			Expression[] convertedArgs = args.Select(x => Expression.Convert(x.Expression, x.LimitType)).ToArray();
 			Expression exp = null;
 			int usedArgs = 0;
-			switch (_operation)
+			switch (OperationKind)
 			{
 				// Unary
 				case TjsOperationKind.CharCodeToChar:
-					exp = Expression.Call(_context.Convert(convertedTarget, typeof(char)), "ToString", null);
-					usedArgs = 1;
+					exp = Expression.Call(Context.Convert(convertedTarget, typeof(char)), "ToString", null);
 					break;
 				case TjsOperationKind.CharToCharCode:
-					exp = Expression.Call(new Func<string, long>(TjsOperationHelper.CharToCharCode).Method, _context.Convert(convertedTarget, typeof(string)));
-					usedArgs = 1;
+					exp = Expression.Call(new Func<string, long>(TjsOperationHelper.CharToCharCode).Method, Context.Convert(convertedTarget, typeof(string)));
 					break;
 				case TjsOperationKind.Evaluate:
 				case TjsOperationKind.Invalidate:
 				case TjsOperationKind.IsValid:
+					if (errorSuggestion == null)
+						errorSuggestion = new DynamicMetaObject(Expression.Throw(Expression.Constant(new NotImplementedException())), BindingRestrictions.Empty);
 					break;
 				case TjsOperationKind.TypeOf:
 					if (target.RuntimeType == null)
@@ -54,36 +64,38 @@ namespace IronTjs.Runtime.Binding
 						exp = Expression.Constant("Real");
 					else
 						exp = Expression.Constant("Object");
-					usedArgs = 1;
 					break;
 				// Unary (Special)
 				case TjsOperationKind.InvokePropertyHandler:
 					if (target.LimitType == typeof(Property))
 					{
 						if (args.Length == 0)
-						{
 							exp = Expression.Property(convertedTarget, (System.Reflection.PropertyInfo)Utils.GetMember<Property>(x => x.Value));
-							usedArgs = 1;
-						}
 						else if (args.Length == 1)
 						{
 							exp = Expression.Assign(Expression.Property(convertedTarget, (System.Reflection.PropertyInfo)Utils.GetMember<Property>(x => x.Value)), args[0].Expression);
-							usedArgs = 2;
+							usedArgs = 1;
 						}
 						else
-							throw Microsoft.Scripting.Utils.Assert.Unreachable;
+						{
+							if (errorSuggestion == null)
+								errorSuggestion = new DynamicMetaObject(Expression.Throw(Expression.Constant(new InvalidOperationException("引数の数が * 演算子に適用できる許容範囲を超えています。"))), BindingRestrictions.Empty);
+						}
 					}
 					else
-						exp = Expression.Throw(Expression.Constant(new InvalidOperationException("プロパティ以外に対して * 演算子が使用されました。")), typeof(object));
+					{
+						if (errorSuggestion == null)
+							errorSuggestion = new DynamicMetaObject(Expression.Throw(Expression.Constant(new InvalidOperationException("プロパティ以外に対して * 演算子が使用されました。"))), BindingRestrictions.Empty);
+					}
 					break;
 				// Binary (Arithmetic & Logical)
 				case TjsOperationKind.FloorDivide:
-					exp = Expression.Divide(_context.Convert(convertedTarget, typeof(long)), _context.Convert(convertedArgs[0], typeof(long)));
-					usedArgs = 2;
+					exp = Expression.Divide(Context.Convert(convertedTarget, typeof(long)), Context.Convert(convertedArgs[0], typeof(long)));
+					usedArgs = 1;
 					break;
 				case TjsOperationKind.RightShiftLogical:
-					exp = Expression.Convert(Expression.RightShift(_context.Convert(convertedTarget, typeof(ulong)), _context.Convert(convertedArgs[0], typeof(int))), typeof(long));
-					usedArgs = 2;
+					exp = Expression.Convert(Expression.RightShift(Context.Convert(convertedTarget, typeof(ulong)), Context.Convert(convertedArgs[0], typeof(int))), typeof(long));
+					usedArgs = 1;
 					break;
 				// Binary (Comparison)
 				case TjsOperationKind.DistinctEqual:
@@ -91,38 +103,43 @@ namespace IronTjs.Runtime.Binding
 						exp = Expression.Condition(Expression.Equal(convertedTarget, convertedArgs[0]), Expression.Constant(1L), Expression.Constant(0L));
 					else
 						exp = Expression.Constant(0L);
-					usedArgs = 2;
+					usedArgs = 1;
 					break;
 				case TjsOperationKind.DistinctNotEqual:
 					if (convertedTarget.Type == convertedArgs[0].Type)
 						exp = Expression.Condition(Expression.Equal(convertedTarget, convertedArgs[0]), Expression.Constant(0L), Expression.Constant(1L));
 					else
 						exp = Expression.Constant(1L);
-					usedArgs = 2;
+					usedArgs = 1;
 					break;
 				// Binary (Special)
 				case TjsOperationKind.InstanceOf:
-					exp = Expression.Condition(Expression.Equal(Expression.Constant(convertedTarget.Type.Name), _context.Convert(convertedArgs[0], typeof(string))),
+					exp = Expression.Condition(Expression.Equal(Expression.Constant(convertedTarget.Type.Name), Context.Convert(convertedArgs[0], typeof(string))),
 						Expression.Constant(1L),
 						Expression.Constant(0L)
 					);
-					usedArgs = 2;
+					usedArgs = 1;
 					break;
 				case TjsOperationKind.InContextOf:
 					if (target.Value is IContextChangeable)
 						exp = Expression.Call(Expression.Convert(convertedTarget, typeof(IContextChangeable)), "ChangeContext", null, args[0].Expression);
 					else if (target.LimitType == typeof(BoundMemberTracker))
 						exp = Expression.New(typeof(BoundMemberTracker).GetConstructor(new[] { typeof(MemberTracker), typeof(object) }), Expression.PropertyOrField(convertedTarget, "BoundTo"), args[0].Expression);
-					usedArgs = 2;
+					else
+					{
+						if (errorSuggestion == null)
+							errorSuggestion = new DynamicMetaObject(Expression.Throw(Expression.Constant(new InvalidOperationException("incontextof 演算子は指定されたオブジェクトに適用できません。"))), BindingRestrictions.Empty);
+					}
+					usedArgs = 1;
 					break;
 			}
+			var restrictions = target.Restrictions.Merge(BindingRestrictions.GetTypeRestriction(target.Expression, target.LimitType));
+			for (int i = 0; i < usedArgs; i++)
+				restrictions = restrictions.Merge(args[i].Restrictions).Merge(BindingRestrictions.GetTypeRestriction(args[i].Expression, args[i].LimitType));
 			if (exp == null)
-				throw new NotImplementedException();
+				return new DynamicMetaObject(errorSuggestion.Expression, errorSuggestion.Restrictions.Merge(restrictions));
 			if (exp.Type != typeof(object))
 				exp = Expression.Convert(exp, typeof(object));
-			var restrictions = target.Restrictions.Merge(BindingRestrictions.GetTypeRestriction(target.Expression, target.LimitType));
-			for (int i = 0; i < usedArgs - 1; i++)
-				restrictions = restrictions.Merge(args[i].Restrictions).Merge(BindingRestrictions.GetTypeRestriction(args[i].Expression, args[i].LimitType));
 			return new DynamicMetaObject(exp, restrictions);
 		}
 	}

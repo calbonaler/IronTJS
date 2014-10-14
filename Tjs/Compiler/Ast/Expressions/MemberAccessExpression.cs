@@ -45,7 +45,7 @@ namespace IronTjs.Compiler.Ast
 			for (var node = Parent; node != null; node = node.Parent)
 			{
 				var unary = node as UnaryExpression;
-				if (unary != null && unary.ExpressionType == Runtime.Binding.TjsOperationKind.AccessPropertyObject)
+				if (unary != null && unary.ExpressionType == UnaryOperator.AccessPropertyObject)
 				{
 					direct = true;
 					break;
@@ -60,7 +60,7 @@ namespace IronTjs.Compiler.Ast
 			for (var node = Parent; node != null; node = node.Parent)
 			{
 				var unary = node as UnaryExpression;
-				if (unary != null && unary.ExpressionType == Runtime.Binding.TjsOperationKind.AccessPropertyObject)
+				if (unary != null && unary.ExpressionType == UnaryOperator.AccessPropertyObject)
 				{
 					direct = true;
 					break;
@@ -96,7 +96,7 @@ namespace IronTjs.Compiler.Ast
 			for (var node = Parent; node != null; node = node.Parent)
 			{
 				var unary = node as UnaryExpression;
-				if (unary != null && unary.ExpressionType == Runtime.Binding.TjsOperationKind.AccessPropertyObject)
+				if (unary != null && unary.ExpressionType == UnaryOperator.AccessPropertyObject)
 				{
 					direct = true;
 					break;
@@ -111,7 +111,7 @@ namespace IronTjs.Compiler.Ast
 			for (var node = Parent; node != null; node = node.Parent)
 			{
 				var unary = node as UnaryExpression;
-				if (unary != null && unary.ExpressionType == Runtime.Binding.TjsOperationKind.AccessPropertyObject)
+				if (unary != null && unary.ExpressionType == UnaryOperator.AccessPropertyObject)
 				{
 					direct = true;
 					break;

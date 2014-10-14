@@ -32,11 +32,17 @@ namespace IronTjs.Runtime
 			return false;
 		}
 
+		protected virtual bool TryCheckInstance(string className, out bool result)
+		{
+			result = false;
+			return false;
+		}
+
 		protected virtual IEnumerable<string> GetMemberNames() { return Enumerable.Empty<string>(); }
 
 		public DynamicMetaObject GetMetaObject(Expression parameter) { return new Meta(parameter, BindingRestrictions.GetTypeRestriction(parameter, GetType()), this); }
 
-		class Meta : DynamicMetaObject
+		class Meta : DynamicMetaObject, ITjsOperable
 		{
 			public Meta(Expression expression, BindingRestrictions restrictions, DynamicStorage value) : base(expression, restrictions, value) { }
 
@@ -158,6 +164,29 @@ namespace IronTjs.Runtime
 					)
 				);
 				return Restrict(exp, binder, BindingRestrictions.Empty);
+			}
+
+			public DynamicMetaObject BindOperation(TjsOperationBinder binder, DynamicMetaObject[] args)
+			{
+				var fallback = binder.FallbackOperation(this, args, null);
+				if (binder.OperationKind == TjsOperationKind.InstanceOf)
+				{
+					var v = Expression.Variable(typeof(bool));
+					var exp = Expression.Block(new[] { v },
+						Expression.Condition(
+							Expression.Call(
+								LimitedInstance,
+								(MethodInfo)Utils.GetMember<bool>(x => Value.TryCheckInstance(null, out x)),
+								binder.Context.Convert(args[0].Expression, typeof(string)),
+								v
+							),
+							Expression.Condition(v, Expression.Constant(1L, typeof(object)), Expression.Constant(0L, typeof(object))),
+							fallback.Expression
+						)
+					);
+					return Restrict(exp, binder, BindingRestrictions.Empty);
+				}
+				return fallback;
 			}
 
 			public override IEnumerable<string> GetDynamicMemberNames() { return Value.GetMemberNames(); }

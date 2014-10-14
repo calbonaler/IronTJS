@@ -43,9 +43,9 @@ namespace IronTjs.Compiler.Ast
 			{
 				if (transformedCases[i].Item1.Length > 0)
 				{
-					var test = LanguageContext.Convert(LanguageContext.DoBinaryOperation(hiddenVar, transformedCases[i].Item1[0], TjsOperationKind.Equal), typeof(bool));
+					var test = LanguageContext.Convert(BinaryExpression.TransformSimpleOperation(LanguageContext, hiddenVar, transformedCases[i].Item1[0], BinaryOperator.Equal), typeof(bool));
 					for (int j = 1; j < transformedCases[i].Item1.Length; i++)
-						test = System.Linq.Expressions.Expression.OrElse(test, LanguageContext.Convert(LanguageContext.DoBinaryOperation(hiddenVar, transformedCases[i].Item1[i], TjsOperationKind.Equal), typeof(bool)));
+						test = System.Linq.Expressions.Expression.OrElse(test, LanguageContext.Convert(BinaryExpression.TransformSimpleOperation(LanguageContext, hiddenVar, transformedCases[i].Item1[i], BinaryOperator.Equal), typeof(bool)));
 					builder.ElseIf(test, System.Linq.Expressions.Expression.Goto(Cases[i].CaseLabel));
 				}
 			}

@@ -52,6 +52,7 @@
     <Compile Include="Builtins\TjsString.cs" />
     <Compile Include="Builtins\TjsVoid.cs" />
     <Compile Include="Compiler\Ast\IContextHolder.cs" />
+    <Compile Include="Compiler\Ast\OperationDistributionResult.cs" />
     <Compile Include="Compiler\Ast\Statements\Block.cs" />
     <Compile Include="Compiler\Ast\ClassDefinition.cs" />
     <Compile Include="Compiler\Ast\Expressions\ConditionalExpression.cs" />
@@ -93,6 +94,7 @@
     <Compile Include="Runtime\Binding\Binders.cs" />
     <Compile Include="Runtime\Binding\IDirectAccessible.cs" />
     <Compile Include="Runtime\Binding\IForceMemberCreatable.cs" />
+    <Compile Include="Runtime\Binding\ITjsOperable.cs" />
     <Compile Include="Runtime\Binding\ThisProxyMemberAccessBinder.cs" />
     <Compile Include="Runtime\Binding\TjsBinaryOperationBinder.cs" />
     <Compile Include="Runtime\Binding\TjsBinder.cs" />

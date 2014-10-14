@@ -21,7 +21,7 @@ namespace IronTjs.Compiler.Ast
 				var unary = node as UnaryExpression;
 				if (unary != null)
 				{
-					if (unary.ExpressionType == Runtime.Binding.TjsOperationKind.AccessPropertyObject)
+					if (unary.ExpressionType == UnaryOperator.AccessPropertyObject)
 						direct = true;
 				}
 				else if ((resolver = node as INameResolver) != null)
@@ -43,7 +43,7 @@ namespace IronTjs.Compiler.Ast
 				var unary = node as UnaryExpression;
 				if (unary != null)
 				{
-					if (unary.ExpressionType == Runtime.Binding.TjsOperationKind.AccessPropertyObject)
+					if (unary.ExpressionType == UnaryOperator.AccessPropertyObject)
 						direct = true;
 				}
 				else if ((resolver = node as INameResolver) != null)
