@@ -83,7 +83,7 @@ namespace IronTjs.Compiler.Ast
 			if (ExpressionType == UnaryOperator.Delete)
 				return Operand.TransformDelete();
 			if (ExpressionType == UnaryOperator.AccessPropertyObject)
-				return Operand.TransformRead();
+				return Operand.TransformGetProperty();
 			var target = Operand.TransformRead();
 			if (ExpressionType == UnaryOperator.PostDecrementAssign || ExpressionType == UnaryOperator.PostIncrementAssign)
 			{
@@ -109,7 +109,7 @@ namespace IronTjs.Compiler.Ast
 			switch (ExpressionType)
 			{
 				case UnaryOperator.AccessPropertyObject:
-					return Operand.TransformWrite(value);
+					return Operand.TransformSetProperty(value);
 				case UnaryOperator.InvokePropertyHandler:
 					return DoUnaryOperation(LanguageContext, ExpressionType, Operand.TransformRead(), value);
 				default:

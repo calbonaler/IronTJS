@@ -23,7 +23,11 @@ namespace IronTjs.Runtime.Binding
 
 		public override DynamicMetaObject FallbackGetMember(DynamicMetaObject target, DynamicMetaObject errorSuggestion)
 		{
-			var result = Context.Binder.GetMember(Name, target, new TjsOverloadResolverFactory(Context.Binder), false, errorSuggestion);
+			DynamicMetaObject result;
+			if (DirectAccess)
+				result = Context.Binder.GetMemberDirect(Name, target, new TjsOverloadResolverFactory(Context.Binder), false, errorSuggestion);
+			else
+				result = Context.Binder.GetMember(Name, target, new TjsOverloadResolverFactory(Context.Binder), false, errorSuggestion);
 			if (result.Expression.Type.IsValueType)
 				result = new DynamicMetaObject(AstUtils.Convert(result.Expression, typeof(object)), result.Restrictions);
 			return result;

@@ -13,8 +13,6 @@ namespace IronTjs.Compiler.Ast
 			throw new NotImplementedException();
 		}
 
-		public override System.Linq.Expressions.Expression TransformWrite(System.Linq.Expressions.Expression value) { throw new InvalidOperationException("super を左辺値とすることはできません。"); }
-
 		public override System.Linq.Expressions.Expression TransformVoid() { return System.Linq.Expressions.Expression.Empty(); }
 	}
 }

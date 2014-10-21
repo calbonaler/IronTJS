@@ -55,8 +55,6 @@ namespace IronTjs.Compiler.Ast
 				return System.Linq.Expressions.Expression.Block(exps);
 		}
 
-		public override System.Linq.Expressions.Expression TransformWrite(System.Linq.Expressions.Expression value) { throw new InvalidOperationException("変数宣言を左辺値とすることはできません。"); }
-
 		public override System.Linq.Expressions.Expression TransformVoid()
 		{
 			var exps = TransformInternal();

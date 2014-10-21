@@ -19,8 +19,6 @@ namespace IronTjs.Compiler.Ast
 			throw Microsoft.Scripting.Utils.Assert.Unreachable;
 		}
 
-		public override System.Linq.Expressions.Expression TransformWrite(System.Linq.Expressions.Expression value) { throw new InvalidOperationException("this を左辺値とすることはできません。"); }
-
 		public override System.Linq.Expressions.Expression TransformVoid() { return System.Linq.Expressions.Expression.Empty(); }
 	}
 }

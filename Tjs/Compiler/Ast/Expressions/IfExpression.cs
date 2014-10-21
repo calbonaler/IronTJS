@@ -21,8 +21,6 @@ namespace IronTjs.Compiler.Ast
 
 		public override System.Linq.Expressions.Expression TransformRead() { throw new InvalidOperationException("if 式の結果を得ることはできません。"); }
 
-		public override System.Linq.Expressions.Expression TransformWrite(System.Linq.Expressions.Expression value) { throw new InvalidOperationException("if 式を左辺値とすることはできません。"); }
-
 		public override System.Linq.Expressions.Expression TransformVoid() { return System.Linq.Expressions.Expression.IfThen(Condition.TransformReadAsBoolean(), Body.TransformVoid()); }
 	}
 }

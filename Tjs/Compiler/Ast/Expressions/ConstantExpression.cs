@@ -14,8 +14,6 @@ namespace IronTjs.Compiler.Ast
 
 		public override System.Linq.Expressions.Expression TransformRead() { return System.Linq.Expressions.Expression.Constant(Value, typeof(object)); }
 
-		public override System.Linq.Expressions.Expression TransformWrite(System.Linq.Expressions.Expression value) { throw new InvalidOperationException("定数を左辺値にすることはできません。"); }
-
 		public override System.Linq.Expressions.Expression TransformVoid() { return System.Linq.Expressions.Expression.Empty(); }
 	}
 }

@@ -149,8 +149,6 @@ namespace IronTjs.Compiler.Ast
 			}
 		}
 
-		public override System.Linq.Expressions.Expression TransformWrite(System.Linq.Expressions.Expression value) { throw new InvalidOperationException("二項演算は左辺値となることはできません。"); }
-
 		public override System.Linq.Expressions.Expression TransformVoid()
 		{
 			switch (ExpressionType)

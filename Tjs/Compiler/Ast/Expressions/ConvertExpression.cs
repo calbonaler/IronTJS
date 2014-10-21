@@ -38,8 +38,6 @@ namespace IronTjs.Compiler.Ast
 			return System.Linq.Expressions.Expression.Convert(IronTjs.Runtime.Binding.Binders.Convert(LanguageContext, Operand.TransformRead(), type), typeof(object));
 		}
 
-		public override System.Linq.Expressions.Expression TransformWrite(System.Linq.Expressions.Expression value) { throw new InvalidOperationException("型変換を左辺値とすることはできません。"); }
-
 		public override System.Linq.Expressions.Expression TransformVoid() { return Operand.TransformVoid(); }
 	}
 

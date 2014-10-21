@@ -6,6 +6,8 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Scripting.Actions;
+using Microsoft.Scripting.Generation;
+using Microsoft.Scripting.Runtime;
 
 namespace IronTjs.Runtime.Binding
 {
@@ -35,6 +37,7 @@ namespace IronTjs.Runtime.Binding
 			Expression convertedTarget = Expression.Convert(target.Expression, target.LimitType);
 			Expression[] convertedArgs = args.Select(x => Expression.Convert(x.Expression, x.LimitType)).ToArray();
 			Expression exp = null;
+			var restrictions = target.Restrictions.Merge(BindingRestrictions.GetTypeRestriction(target.Expression, target.LimitType));
 			int usedArgs = 0;
 			switch (OperationKind)
 			{
@@ -75,6 +78,47 @@ namespace IronTjs.Runtime.Binding
 						{
 							exp = Expression.Assign(Expression.Property(convertedTarget, (System.Reflection.PropertyInfo)Utils.GetMember<Property>(x => x.Value)), args[0].Expression);
 							usedArgs = 1;
+						}
+						else
+						{
+							if (errorSuggestion == null)
+								errorSuggestion = new DynamicMetaObject(Expression.Throw(Expression.Constant(new InvalidOperationException("引数の数が * 演算子に適用できる許容範囲を超えています。"))), BindingRestrictions.Empty);
+						}
+					}
+					else if (target.LimitType == typeof(BoundMemberTracker))
+					{
+						var tracker = (BoundMemberTracker)target.Value;
+						if (tracker.Instance == null)
+							tracker = new BoundMemberTracker(tracker.BoundTo, new DynamicMetaObject(Expression.Constant(tracker.ObjectInstance), BindingRestrictions.Empty, tracker.ObjectInstance));
+						var type = tracker.Instance.GetLimitType();
+						if (args.Length == 0)
+						{
+							var res = tracker.GetValue(new TjsOverloadResolverFactory(Context.Binder), Context.Binder, type);
+							if (res != null)
+							{
+								exp = res.Expression;
+								restrictions = restrictions.Merge(res.Restrictions);
+							}
+							else
+							{
+								if (errorSuggestion == null)
+									errorSuggestion = new DynamicMetaObject(Expression.Throw(Expression.Constant(new InvalidOperationException("メンバの取得に失敗しました。"))), BindingRestrictions.Empty);
+							}
+						}
+						else if (args.Length == 1)
+						{
+							var res = tracker.SetValue(new TjsOverloadResolverFactory(Context.Binder), Context.Binder, type, args[0]);
+							if (res != null)
+							{
+								exp = res.Expression;
+								restrictions = restrictions.Merge(res.Restrictions);
+								usedArgs = 1;
+							}
+							else
+							{
+								if (errorSuggestion == null)
+									errorSuggestion = new DynamicMetaObject(Expression.Throw(Expression.Constant(new InvalidOperationException("メンバの設定に失敗しました。"))), BindingRestrictions.Empty);
+							}
 						}
 						else
 						{
@@ -133,7 +177,6 @@ namespace IronTjs.Runtime.Binding
 					usedArgs = 1;
 					break;
 			}
-			var restrictions = target.Restrictions.Merge(BindingRestrictions.GetTypeRestriction(target.Expression, target.LimitType));
 			for (int i = 0; i < usedArgs; i++)
 				restrictions = restrictions.Merge(args[i].Restrictions).Merge(BindingRestrictions.GetTypeRestriction(args[i].Expression, args[i].LimitType));
 			if (exp == null)

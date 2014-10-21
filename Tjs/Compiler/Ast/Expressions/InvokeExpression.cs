@@ -34,8 +34,6 @@ namespace IronTjs.Compiler.Ast
 			return System.Linq.Expressions.Expression.Dynamic(LanguageContext.CreateInvokeBinder(new System.Dynamic.CallInfo(Arguments.Count)), typeof(object), argumentsExp);
 		}
 
-		public override System.Linq.Expressions.Expression TransformWrite(System.Linq.Expressions.Expression value) { throw new InvalidOperationException("関数呼び出しを左辺値とすることはできません。"); }
-
 		public override System.Linq.Expressions.Expression TransformVoid() { return Microsoft.Scripting.Ast.Utils.Void(TransformRead()); }
 	}
 }

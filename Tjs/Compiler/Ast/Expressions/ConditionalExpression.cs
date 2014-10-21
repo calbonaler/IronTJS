@@ -36,6 +36,22 @@ namespace IronTjs.Compiler.Ast
 			);
 		}
 
+		public override System.Linq.Expressions.Expression TransformDelete() { return System.Linq.Expressions.Expression.Condition(Condition.TransformReadAsBoolean(), IfTrue.TransformDelete(), IfFalse.TransformDelete()); }
+
+		public override System.Linq.Expressions.Expression TransformGetProperty() { return System.Linq.Expressions.Expression.Condition(Condition.TransformReadAsBoolean(), IfTrue.TransformGetProperty(), IfFalse.TransformGetProperty()); }
+
+		public override System.Linq.Expressions.Expression TransformSetProperty(System.Linq.Expressions.Expression value)
+		{
+			var v = System.Linq.Expressions.Expression.Variable(typeof(object));
+			return System.Linq.Expressions.Expression.Block(new[] { v },
+				System.Linq.Expressions.Expression.Assign(v, value),
+				System.Linq.Expressions.Expression.Condition(Condition.TransformReadAsBoolean(),
+					IfTrue.TransformSetProperty(v),
+					IfFalse.TransformSetProperty(v)
+				)
+			);
+		}
+
 		public override System.Linq.Expressions.Expression TransformVoid() { return System.Linq.Expressions.Expression.IfThenElse(Condition.TransformReadAsBoolean(), IfTrue.TransformVoid(), IfFalse.TransformVoid()); }
 	}
 }
