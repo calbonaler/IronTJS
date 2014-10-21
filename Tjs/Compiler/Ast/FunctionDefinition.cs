@@ -98,14 +98,14 @@ namespace IronTjs.Compiler.Ast
 			{
 				MSAst.Expression exp = MSAst.Expression.ArrayAccess(_parameters, MSAst.Expression.Constant(i));
 				if (Parameters[i].HasDefaultValue)
-					exp = MSAst.Expression.Condition(MSAst.Expression.TypeEqual(exp, typeof(IronTjs.Builtins.TjsVoid)),
+					exp = MSAst.Expression.Condition(MSAst.Expression.TypeEqual(exp, typeof(IronTjs.Builtins.Void)),
 						MSAst.Expression.Constant(Parameters[i].DefaultValue, typeof(object)),
 						exp
 					);
 				body.Add(MSAst.Expression.Assign(Parameters[i].ParameterVariable,
 					MSAst.Expression.Condition(MSAst.Expression.LessThan(MSAst.Expression.Constant(i), MSAst.Expression.Property(_parameters, "Length")),
 						exp,
-						MSAst.Expression.Constant(Parameters[i].HasDefaultValue ? Parameters[i].DefaultValue : IronTjs.Builtins.TjsVoid.Value, typeof(object))
+						MSAst.Expression.Constant(Parameters[i].HasDefaultValue ? Parameters[i].DefaultValue : IronTjs.Builtins.Void.Value, typeof(object))
 					)
 				));
 			}
@@ -113,7 +113,7 @@ namespace IronTjs.Compiler.Ast
 			{
 				body.Add(statement.Transform());
 			}
-			body.Add(MSAst.Expression.Label(ReturnLabel, MSAst.Expression.Constant(IronTjs.Builtins.TjsVoid.Value)));
+			body.Add(MSAst.Expression.Label(ReturnLabel, MSAst.Expression.Constant(IronTjs.Builtins.Void.Value)));
 			return MSAst.Expression.Lambda<Func<object, object[], object>>(MSAst.Expression.Block(_variables.Values.Concat(Parameters.Select(x => x.ParameterVariable)), body), Name, new[] { _context, _parameters });
 		}
 

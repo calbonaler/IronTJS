@@ -30,7 +30,7 @@ namespace IronTjs.Compiler.Ast
 		public override System.Linq.Expressions.Expression TransformRead()
 		{
 			var targetExp = Target.TransformRead();
-			var argumentsExp = Enumerable.Repeat(targetExp, 1).Concat(Arguments.Select(x => x != null ? x.TransformRead() : System.Linq.Expressions.Expression.Constant(IronTjs.Builtins.TjsVoid.Value))).ToArray();
+			var argumentsExp = Enumerable.Repeat(targetExp, 1).Concat(Arguments.Select(x => x != null ? x.TransformRead() : System.Linq.Expressions.Expression.Constant(IronTjs.Builtins.Void.Value))).ToArray();
 			return System.Linq.Expressions.Expression.Dynamic(LanguageContext.CreateInvokeBinder(new System.Dynamic.CallInfo(Arguments.Count)), typeof(object), argumentsExp);
 		}
 

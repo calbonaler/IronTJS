@@ -41,7 +41,7 @@ namespace IronTjs.Runtime.Binding
 				return InSuccess(Expression.Convert(expression, toType), succeeded);
 			else if (toType == expression.Type)
 				return InSuccess(expression, succeeded);
-			else if (expression.Type == typeof(IronTjs.Builtins.TjsVoid))
+			else if (expression.Type == typeof(IronTjs.Builtins.Void))
 			{
 				if (toType == typeof(string))
 					return InSuccess(Expression.Constant(string.Empty), succeeded);

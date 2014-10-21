@@ -70,7 +70,7 @@ namespace IronTjs.Compiler.Ast
 					else
 					{
 						exps.Add(Statements[Statements.Count - 1].Transform());
-						exps.Add(System.Linq.Expressions.Expression.Constant(Builtins.TjsVoid.Value));
+						exps.Add(System.Linq.Expressions.Expression.Constant(Builtins.Void.Value));
 					}
 				}
 				System.Linq.Expressions.Expression body;
@@ -79,7 +79,7 @@ namespace IronTjs.Compiler.Ast
 				else if (exps.Count == 1)
 					body = exps[0];
 				else if (hasResult)
-					body = System.Linq.Expressions.Expression.Constant(Builtins.TjsVoid.Value);
+					body = System.Linq.Expressions.Expression.Constant(Builtins.Void.Value);
 				else
 					body = System.Linq.Expressions.Expression.Empty();
 				return System.Linq.Expressions.Expression.Lambda<TDelegate>(body, _context);

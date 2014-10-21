@@ -21,10 +21,10 @@ namespace IronTjs.Runtime.Binding
 		{
 			if (type == typeof(string))
 			{
-				var method = typeof(IronTjs.Builtins.TjsString).GetMethod(name);
+				var method = typeof(IronTjs.Builtins.String).GetMethod(name);
 				if (method != null)
 					return new MemberGroup(MemberTracker.FromMemberInfo(method, typeof(string)));
-				var property = typeof(IronTjs.Builtins.TjsString).GetField(name + "Property");
+				var property = typeof(IronTjs.Builtins.String).GetField(name + "Property");
 				if (property != null && property.FieldType == typeof(ExtensionPropertyTracker))
 					return new MemberGroup((ExtensionPropertyTracker)property.GetValue(null));
 				return MemberGroup.EmptyGroup;
@@ -37,7 +37,7 @@ namespace IronTjs.Runtime.Binding
 		internal static object ConvertInternal(object obj, Type toType)
 		{
 			Type fromType;
-			if (obj == null || (fromType = obj.GetType()) == typeof(TjsVoid))
+			if (obj == null || (fromType = obj.GetType()) == typeof(IronTjs.Builtins.Void))
 			{
 				if (toType == typeof(string))
 					return obj == null ? "null" : string.Empty;
@@ -115,7 +115,7 @@ namespace IronTjs.Runtime.Binding
 		{
 			var nonNullable = Binders.GetNonNullableType(toType);
 			return toType.IsAssignableFrom(fromType) ||
-				fromType == typeof(IronTjs.Builtins.TjsVoid) ||
+				fromType == typeof(IronTjs.Builtins.Void) ||
 				toType == typeof(object) ||
 				toType == typeof(string) ||
 				nonNullable == typeof(bool) ||

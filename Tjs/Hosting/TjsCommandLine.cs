@@ -28,6 +28,8 @@ namespace IronTjs.Hosting
 			var result = ExecuteCommand(Engine.CreateScriptSourceFromString(command, SourceCodeKind.InteractiveCode));
 			if (result == null)
 				Console.WriteLine("null", Style.Out);
+			else if (result.GetType() == typeof(Builtins.Void))
+				Console.WriteLine("void", Style.Out);
 			else if (result.GetType() == typeof(string))
 				Console.WriteLine(string.Format("\"{0}\"", result), Style.Out);
 			else

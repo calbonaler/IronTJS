@@ -9,7 +9,7 @@ using Microsoft.Scripting.Actions;
 
 namespace IronTjs.Builtins
 {
-	public static class TjsString
+	public static class String
 	{
 		enum SprintfFlag
 		{
@@ -184,7 +184,12 @@ namespace IronTjs.Builtins
 
 		public static string replace(this string value, string pattern, string replacement) { return System.Text.RegularExpressions.Regex.Replace(value, pattern, replacement); }
 
-		public static string[] split(this string value, string delimiters, object reserved, bool ignoreEmptyEntries = false) { return value.Split(delimiters.ToCharArray(), ignoreEmptyEntries ? StringSplitOptions.RemoveEmptyEntries : StringSplitOptions.None); }
+		public static Array split(this string value, object patternOrDelimiters, object reserved = null, bool removeEmptyEntries = false)
+		{
+			var res = new Array();
+			res.split(patternOrDelimiters, value, reserved, removeEmptyEntries);
+			return res;
+		}
 
 		public static string escape(this string value)
 		{

@@ -49,8 +49,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Builtins\TjsString.cs" />
-    <Compile Include="Builtins\TjsVoid.cs" />
+    <Compile Include="Builtins\Array.cs" />
+    <Compile Include="Builtins\CircularBuffer.cs" />
+    <Compile Include="Builtins\String.cs" />
+    <Compile Include="Builtins\Void.cs" />
     <Compile Include="Compiler\Ast\IContextHolder.cs" />
     <Compile Include="Compiler\Ast\OperationDistributionResult.cs" />
     <Compile Include="Compiler\Ast\Statements\Block.cs" />

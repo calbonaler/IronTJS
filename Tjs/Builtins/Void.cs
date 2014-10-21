@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 
 namespace IronTjs.Builtins
 {
-	public sealed class TjsVoid
+	public sealed class Void
 	{
-		public static readonly TjsVoid Value = new TjsVoid();
+		public static readonly Void Value = new Void();
 
-		TjsVoid() { }
+		Void() { }
 
-		public override string ToString() { return "void"; }
+		public override string ToString() { return ""; }
 	}
 }

@@ -782,7 +782,7 @@ namespace IronTjs.Compiler
 			else if (Accept(TokenType.KeywordNull) != null)
 				return null;
 			else if (Accept(TokenType.KeywordVoid) != null)
-				return IronTjs.Builtins.TjsVoid.Value;
+				return IronTjs.Builtins.Void.Value;
 			else if ((token = Accept(TokenType.LiteralInteger, TokenType.LiteralReal)) != null)
 				return token.Value;
 			else

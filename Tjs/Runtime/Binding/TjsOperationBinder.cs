@@ -32,12 +32,20 @@ namespace IronTjs.Runtime.Binding
 				return FallbackOperation(target, args, null);
 		}
 
+		static BindingRestrictions GetTypeRestriction(DynamicMetaObject obj)
+		{
+			if (obj.RuntimeType == null)
+				return BindingRestrictions.GetInstanceRestriction(obj.Expression, null);
+			else
+				return BindingRestrictions.GetTypeRestriction(obj.Expression, obj.RuntimeType);
+		}
+
 		public DynamicMetaObject FallbackOperation(DynamicMetaObject target, DynamicMetaObject[] args, DynamicMetaObject errorSuggestion)
 		{
 			Expression convertedTarget = Expression.Convert(target.Expression, target.LimitType);
 			Expression[] convertedArgs = args.Select(x => Expression.Convert(x.Expression, x.LimitType)).ToArray();
 			Expression exp = null;
-			var restrictions = target.Restrictions.Merge(BindingRestrictions.GetTypeRestriction(target.Expression, target.LimitType));
+			var restrictions = target.Restrictions.Merge(GetTypeRestriction(target));
 			int usedArgs = 0;
 			switch (OperationKind)
 			{
@@ -57,7 +65,7 @@ namespace IronTjs.Runtime.Binding
 				case TjsOperationKind.TypeOf:
 					if (target.RuntimeType == null)
 						exp = Expression.Constant("Object");
-					if (target.RuntimeType == typeof(IronTjs.Builtins.TjsVoid))
+					else if (target.RuntimeType == typeof(IronTjs.Builtins.Void))
 						exp = Expression.Constant("void");
 					else if (target.RuntimeType == typeof(string))
 						exp = Expression.Constant("String");
@@ -178,7 +186,7 @@ namespace IronTjs.Runtime.Binding
 					break;
 			}
 			for (int i = 0; i < usedArgs; i++)
-				restrictions = restrictions.Merge(args[i].Restrictions).Merge(BindingRestrictions.GetTypeRestriction(args[i].Expression, args[i].LimitType));
+				restrictions = restrictions.Merge(args[i].Restrictions).Merge(GetTypeRestriction(args[i]));
 			if (exp == null)
 				return new DynamicMetaObject(errorSuggestion.Expression, errorSuggestion.Restrictions.Merge(restrictions));
 			if (exp.Type != typeof(object))

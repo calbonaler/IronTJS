@@ -72,7 +72,7 @@ namespace IronTjs.Compiler.Ast
 					if (initializer.Value != null)
 						fields[initializer.Key] = MSAst.Lambda<Func<object, object>>(initializer.Value.TransformRead(), _context);
 					else
-						fields[initializer.Key] = MSAst.Lambda<Func<object, object>>(MSAst.Constant(Builtins.TjsVoid.Value), _context);
+						fields[initializer.Key] = MSAst.Lambda<Func<object, object>>(MSAst.Constant(Builtins.Void.Value), _context);
 				}
 			}
 			var fieldsArg = MSAst.Call(

@@ -87,7 +87,7 @@ namespace IronTjs.Runtime
 						Expression.Call(
 							LimitedInstance, 
 							(MethodInfo)Utils.GetMember<object>(x => Value.TryGetValue(null, false, out x)),
-							Expression.Constant(key), Expression.Constant(accessible != null && accessible.DirectAccess), v
+							Expression.Constant(key, typeof(object)), Expression.Constant(accessible != null && accessible.DirectAccess), v
 						),
 						v,
 						fallback().Expression
@@ -107,7 +107,7 @@ namespace IronTjs.Runtime
 						Expression.Call(
 							LimitedInstance,
 							(MethodInfo)Utils.GetMember(() => Value.TrySetValue(null, false, false, null)),
-							Expression.Constant(key),
+							Expression.Constant(key, typeof(object)),
 							Expression.Constant(accessible != null && accessible.DirectAccess),
 							Expression.Constant(creatable == null || creatable.ForceCreate),
 							v
