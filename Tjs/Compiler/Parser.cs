@@ -762,6 +762,18 @@ namespace IronTjs.Compiler
 				return new GlobalExpression();
 			else if (Accept(TokenType.KeywordThis) != null)
 				return new ThisExpression();
+			else if (Accept(TokenType.SymbolOpenBracket) != null)
+			{
+				List<Expression> exps = new List<Expression>();
+				if (Accept(TokenType.SymbolCloseBracket) == null)
+				{
+					exps.Add(ParseAssignmentExpression());
+					while (Accept(TokenType.SymbolComma) != null)
+						exps.Add(ParseAssignmentExpression());
+					Expect(TokenType.SymbolCloseBracket);
+				}
+				return new NewArrayExpression(exps);
+			}
 			else if (Accept(TokenType.SymbolOpenParenthesis) != null)
 			{
 				var exp = ParseExpression();

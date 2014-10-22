@@ -53,6 +53,7 @@
     <Compile Include="Builtins\CircularBuffer.cs" />
     <Compile Include="Builtins\String.cs" />
     <Compile Include="Builtins\Void.cs" />
+    <Compile Include="Compiler\Ast\Expressions\NewArrayExpression.cs" />
     <Compile Include="Compiler\Ast\IContextHolder.cs" />
     <Compile Include="Compiler\Ast\OperationDistributionResult.cs" />
     <Compile Include="Compiler\Ast\Statements\Block.cs" />

@@ -9,6 +9,10 @@ namespace IronTjs.Builtins
 {
 	public class Array : IEnumerable<object>
 	{
+		public Array() { _buffer = new CircularBuffer<object>(); }
+
+		public Array(IEnumerable<object> collection) { _buffer = new CircularBuffer<object>(collection); }
+
 		CircularBuffer<object> _buffer = new CircularBuffer<object>();
 
 		public object this[int index]
