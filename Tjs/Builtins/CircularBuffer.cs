@@ -9,7 +9,7 @@ namespace IronTjs.Builtins
 {
 	public class CircularBuffer<T> : IList<T>
 	{
-		public CircularBuffer() : this(256) { }
+		public CircularBuffer() : this(DefaultCapacity) { }
 
 		public CircularBuffer(int capacity)
 		{
@@ -18,6 +18,16 @@ namespace IronTjs.Builtins
 			_top = _bottom = 0;
 		}
 
+		public CircularBuffer(IEnumerable<T> collection)
+		{
+			var array = collection.ToArray();
+			_data = new T[Math.Max(Pow2((uint)array.Length), DefaultCapacity)];
+			array.CopyTo(_data, 0);
+			_top = 0;
+			_bottom = array.Length;
+		}
+
+		const int DefaultCapacity = 256;
 		T[] _data;
 		int _top, _bottom;
 
