@@ -120,7 +120,7 @@ namespace IronTjs.Compiler.Ast
 		public System.Linq.Expressions.Expression TransformFunction(System.Linq.Expressions.Expression context)
 		{
 			var lambda = TransformLambda();
-			return MSAst.Expression.New(typeof(IronTjs.Runtime.Function).GetConstructor(new[] { typeof(Func<object, object[], object>), typeof(object) }),
+			return MSAst.Expression.New((System.Reflection.ConstructorInfo)Utils.GetMember(() => new Runtime.Function(null, null)),
 				lambda,
 				context
 			);

@@ -38,7 +38,7 @@ namespace IronTjs.Compiler.Ast
 				setter = Setter.TransformLambda();
 			else
 				setter = MSAst.Expression.Constant(null, typeof(Func<object, object[], object>));
-			return MSAst.Expression.New(typeof(IronTjs.Runtime.Property).GetConstructor(new[] { typeof(Func<object, object[], object>), typeof(Func<object, object[], object>), typeof(object) }),
+			return MSAst.Expression.New((System.Reflection.ConstructorInfo)Utils.GetMember(() => new Runtime.Property(null, null, null)),
 				getter,
 				setter,
 				context

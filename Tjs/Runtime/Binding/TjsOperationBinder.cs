@@ -176,7 +176,7 @@ namespace IronTjs.Runtime.Binding
 					if (target.Value is IContextChangeable)
 						exp = Expression.Call(Expression.Convert(convertedTarget, typeof(IContextChangeable)), "ChangeContext", null, args[0].Expression);
 					else if (target.LimitType == typeof(BoundMemberTracker))
-						exp = Expression.New(typeof(BoundMemberTracker).GetConstructor(new[] { typeof(MemberTracker), typeof(object) }), Expression.PropertyOrField(convertedTarget, "BoundTo"), args[0].Expression);
+						exp = Expression.New((System.Reflection.ConstructorInfo)Utils.GetMember(() => new BoundMemberTracker(null, (object)null)), Expression.PropertyOrField(convertedTarget, "BoundTo"), args[0].Expression);
 					else
 					{
 						if (errorSuggestion == null)

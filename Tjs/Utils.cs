@@ -21,6 +21,8 @@ namespace IronTjs
 			Expression exp = lambda.Body;
 			if (exp.NodeType == ExpressionType.Convert || exp.NodeType == ExpressionType.ConvertChecked)
 				exp = ((UnaryExpression)exp).Operand;
+			if (exp.NodeType == ExpressionType.New)
+				return ((NewExpression)exp).Constructor;
 			if (exp.NodeType == ExpressionType.Call)
 				return ((MethodCallExpression)exp).Method;
 			if (exp.NodeType == ExpressionType.MemberAccess)

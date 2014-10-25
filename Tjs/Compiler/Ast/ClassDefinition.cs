@@ -81,14 +81,7 @@ namespace IronTjs.Compiler.Ast
 				MSAst.NewArrayInit(typeof(Func<object, object>), fields.Values),
 				(System.Linq.Expressions.Expression<Func<string, Func<object, object>, KeyValuePair<string, Func<object, object>>>>)((x, y) => new KeyValuePair<string, Func<object, object>>(x, y))
 			);
-			var ctor = typeof(Class).GetConstructor(new[]
-			{
-				typeof(string),
-				typeof(IEnumerable<Func<Class>>),
-				typeof(IEnumerable<KeyValuePair<string, object>>),
-				typeof(IEnumerable<KeyValuePair<string, Func<object, object>>>)
-			});
-			return MSAst.New(ctor, MSAst.Constant(Name), MSAst.NewArrayInit(typeof(Func<Class>), classFinders), membersArg, fieldsArg);
+			return MSAst.New((System.Reflection.ConstructorInfo)Utils.GetMember(() => new Class(null, null, null, null)), MSAst.Constant(Name), MSAst.NewArrayInit(typeof(Func<Class>), classFinders), membersArg, fieldsArg);
 		}
 
 		public System.Linq.Expressions.Expression Register(System.Linq.Expressions.Expression registeredTo)
