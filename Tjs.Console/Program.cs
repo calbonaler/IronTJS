@@ -48,6 +48,8 @@ sealed class TjsConsoleHost : ConsoleHost
 			return ConsoleIO.ReadLine(-1);
 		}, null));
 		scope.SetVariable("Array", Microsoft.Scripting.Actions.MemberTracker.FromMemberInfo(typeof(IronTjs.Builtins.Array)));
+		scope.SetVariable("Dictionary", IronTjs.Builtins.Dictionary.GetClass());
+		scope.SetVariable("Exception", Microsoft.Scripting.Actions.MemberTracker.FromMemberInfo(typeof(Exception)));
 	}
 
 	static int Main(string[] args)

@@ -6,7 +6,6 @@ using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
-using IronTjs.Builtins;
 using Microsoft.Scripting.Actions;
 using Microsoft.Scripting.Actions.Calls;
 using Microsoft.Scripting.Runtime;
@@ -28,6 +27,12 @@ namespace IronTjs.Runtime.Binding
 				if (property != null && property.FieldType == typeof(ExtensionPropertyTracker))
 					return new MemberGroup((ExtensionPropertyTracker)property.GetValue(null));
 				return MemberGroup.EmptyGroup;
+			}
+			else if (type.IsSubclassOf(typeof(Exception)))
+			{
+				var property = typeof(IronTjs.Builtins.Exception).GetField(name + "Property");
+				if (property != null && property.FieldType == typeof(ExtensionPropertyTracker))
+					return new MemberGroup((ExtensionPropertyTracker)property.GetValue(null));
 			}
 			return base.GetMember(action, type, name);
 		}

@@ -90,7 +90,7 @@ namespace IronTjs.Runtime
 							Expression.Constant(key, typeof(object)), Expression.Constant(accessible != null && accessible.DirectAccess), v
 						),
 						v,
-						fallback().Expression
+						Expression.Convert(fallback().Expression, typeof(object))
 					)
 				);
 				return Restrict(exp, binder, additional);
@@ -113,7 +113,7 @@ namespace IronTjs.Runtime
 							v
 						),
 						v,
-						fallback().Expression
+						Expression.Convert(fallback().Expression, typeof(object))
 					)
 				);
 				return Restrict(exp, binder, additional);
@@ -160,7 +160,7 @@ namespace IronTjs.Runtime
 							Expression.NewArrayInit(typeof(object), args.Select(x => Expression.Convert(x.Expression, typeof(object)))), v
 						),
 						v,
-						base.BindCreateInstance(binder, args).Expression
+						Expression.Convert(base.BindCreateInstance(binder, args).Expression, typeof(object))
 					)
 				);
 				return Restrict(exp, binder, BindingRestrictions.Empty);
@@ -181,7 +181,7 @@ namespace IronTjs.Runtime
 								v
 							),
 							Expression.Condition(v, Expression.Constant(1L, typeof(object)), Expression.Constant(0L, typeof(object))),
-							fallback.Expression
+							Expression.Convert(fallback.Expression, typeof(object))
 						)
 					);
 					return Restrict(exp, binder, BindingRestrictions.Empty);

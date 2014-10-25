@@ -10,7 +10,12 @@ namespace IronTjs.Compiler.Ast
 {
 	public class NewArrayExpression : Expression
 	{
-		public NewArrayExpression(IEnumerable<Expression> expressions) { Expressions = expressions.ToReadOnly(); }
+		public NewArrayExpression(IEnumerable<Expression> expressions)
+		{
+			Expressions = expressions.ToReadOnly();
+			foreach (var exp in Expressions)
+				exp.Parent = this;
+		}
 
 		public ReadOnlyCollection<Expression> Expressions { get; private set; }
 

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using IronTjs.Builtins;
 using IronTjs.Compiler.Ast;
 using IronTjs.Runtime.Binding;
 using Microsoft.Scripting;
@@ -774,6 +773,19 @@ namespace IronTjs.Compiler
 				}
 				return new NewArrayExpression(exps);
 			}
+			else if (Accept(TokenType.SymbolPercent) != null)
+			{
+				Expect(TokenType.SymbolOpenBracket);
+				List<DictionaryInitializationEntry> exps = new List<DictionaryInitializationEntry>();
+				if (Accept(TokenType.SymbolCloseBracket) == null)
+				{
+					exps.Add(ParseDictionaryInitializationEntry());
+					while (Accept(TokenType.SymbolComma) != null)
+						exps.Add(ParseDictionaryInitializationEntry());
+					Expect(TokenType.SymbolCloseBracket);
+				}
+				return new NewDictionaryExpression(exps);
+			}
 			else if (Accept(TokenType.SymbolOpenParenthesis) != null)
 			{
 				var exp = ParseExpression();
@@ -782,6 +794,14 @@ namespace IronTjs.Compiler
 			}
 			else
 				return new ConstantExpression(ParseLiteral());
+		}
+
+		DictionaryInitializationEntry ParseDictionaryInitializationEntry()
+		{
+			var key = ParseAssignmentExpression();
+			Expect(TokenType.SymbolEqualsGreaterThan);
+			var value = ParseAssignmentExpression();
+			return new DictionaryInitializationEntry(key, value);
 		}
 
 		object ParseLiteral()

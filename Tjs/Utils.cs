@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -37,5 +38,56 @@ namespace IronTjs
 		public static MemberInfo GetMember<T>(Expression<Func<T, object>> lambda) { return GetMemberEx(lambda); }
 
 		public static MemberInfo GetMember<T>(Expression<Action<T>> lambda) { return GetMemberEx(lambda); }
+
+		internal static string ConvertToExpression(IEnumerable self, int indent)
+		{
+			StringBuilder sb = new StringBuilder();
+			indent += 4;
+			var dict = self as IDictionary;
+			if (dict != null)
+			{
+				sb.Append("(const) %[");
+				string sep = "";
+				var iter = dict.GetEnumerator();
+				while (iter.MoveNext())
+				{
+					sb.AppendFormat(sep + Environment.NewLine + new string(' ', indent) + "\"{0}\" => ", iter.Key);
+					WriteValue(sb, indent, iter.Value);
+					sep = ",";
+				}
+			}
+			else
+			{
+				sb.Append("(const) [");
+				string sep = "";
+				foreach (var item in self)
+				{
+					sb.Append(sep + Environment.NewLine + new string(' ', indent));
+					WriteValue(sb, indent, item);
+					sep = ",";
+				}
+			}
+			indent -= 4;
+			sb.Append(Environment.NewLine + new string(' ', indent) + "]");
+			return sb.ToString();
+		}
+
+		static void WriteValue(StringBuilder sb, int indent, object value)
+		{
+			if (value == null)
+				sb.Append("void");
+			else if (value.GetType() == typeof(string))
+				sb.AppendFormat("\"{0}\"", value);
+			else if (Runtime.Binding.Binders.IsNumber(value.GetType()))
+				sb.AppendFormat("{0}", value);
+			else
+			{
+				var enumerable = value as IEnumerable;
+				if (enumerable != null)
+					sb.Append(ConvertToExpression(enumerable, indent));
+				else
+					sb.Append("void");
+			}
+		}
 	}
 }

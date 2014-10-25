@@ -101,7 +101,11 @@ namespace IronTjs.Builtins
 			throw new NotImplementedException();
 		}
 
-		public Array saveStruct(string fileName, string mode = "") { throw new NotImplementedException(); }
+		public Array saveStruct(string fileName, string mode = "")
+		{
+			System.IO.File.WriteAllText(fileName, Utils.ConvertToExpression(this, 0));
+			return this;
+		}
 
 		public void assign(IEnumerable source)
 		{
@@ -123,7 +127,43 @@ namespace IronTjs.Builtins
 			}
 		}
 
-		public void assignStruct(IEnumerable source) { throw new NotImplementedException(); }
+		public void assignStruct(IEnumerable source)
+		{
+			_buffer.Clear();
+			var dictSource = source as IDictionary;
+			if (dictSource != null)
+			{
+				var de = dictSource.GetEnumerator();
+				while (de.MoveNext())
+				{
+					_buffer.Add(de.Key);
+					var subSource = de.Value as IEnumerable;
+					if (subSource != null)
+					{
+						var subArray = new Array();
+						subArray.assignStruct(subSource);
+						_buffer.Add(subArray);
+					}
+					else
+						_buffer.Add(de.Value);
+				}
+			}
+			else
+			{
+				foreach (var item in source)
+				{
+					var subSource = item as IEnumerable;
+					if (subSource != null)
+					{
+						var subArray = new Array();
+						subArray.assignStruct(subSource);
+						_buffer.Add(subArray);
+					}
+					else
+						_buffer.Add(item);
+				}
+			}
+		}
 
 		public void clear() { _buffer.Clear(); }
 
