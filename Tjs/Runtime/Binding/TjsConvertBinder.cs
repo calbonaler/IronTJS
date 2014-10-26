@@ -18,12 +18,20 @@ namespace IronTjs.Runtime.Binding
 
 		public override DynamicMetaObject FallbackConvert(DynamicMetaObject target, DynamicMetaObject errorSuggestion)
 		{
-			var exp = TryConvertExpression(Expression.Convert(target.Expression, target.LimitType), Type, null);
+			var newTarget = new DynamicMetaObject(Expression.Convert(target.Expression, target.LimitType), BindingRestrictions.GetTypeRestriction(target.Expression, target.LimitType), target.Value);
+			var exp = TryConvertExpression(newTarget.Expression, Type, null);
 			if (exp == null)
-				throw new NotImplementedException();
+				exp = Expression.Throw(Expression.Constant(new InvalidCastException()), Type);
 			if (ReturnType != Type)
 				exp = Expression.Convert(exp, ReturnType);
-			return new DynamicMetaObject(exp, BindingRestrictionsHelpers.GetRuntimeTypeRestriction(target));
+			var ret = _context.Binder.ConvertTo(
+				Type,
+				Explicit ? Microsoft.Scripting.Actions.ConversionResultKind.ExplicitCast : Microsoft.Scripting.Actions.ConversionResultKind.ImplicitCast,
+				newTarget,
+				new TjsOverloadResolverFactory(_context.Binder),
+				new DynamicMetaObject(exp, BindingRestrictionsHelpers.GetRuntimeTypeRestriction(target))
+			);
+			return ret;
 		}
 
 		static Expression NewNullableOrThrough(Expression exp, Type toType, Type nonNullableType)

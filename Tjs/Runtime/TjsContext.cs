@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using IronTjs.Compiler;
@@ -18,7 +19,16 @@ namespace IronTjs.Runtime
 		public TjsContext(ScriptDomainManager manager, IDictionary<string, object> options) : base(manager)
 		{
 			Binder = new TjsBinder();
+			DefaultContext.InitializeDefaults(this);
 		}
+
+		// Comparison
+		CallSite<Func<CallSite, object, object, object>> _distinctEqualSite, _distinctNotEqualSite;
+		CallSite<Func<CallSite, object, object, object>> _equalSite, _notEqualSite;
+		CallSite<Func<CallSite, object, object, object>> _lessThanSite, _lessThanEqualSite, _greaterThanSite, _greaterThanEqualSite;
+		
+		// Conversion
+		Dictionary<Type, CallSite> _convertSites;
 
 		public override ScriptCode CompileSourceCode(SourceUnit sourceUnit, CompilerOptions options, ErrorSink errorSink)
 		{
@@ -86,5 +96,43 @@ namespace IronTjs.Runtime
 			return exception.GetType().ToString() + ": " + exception.Message;
 		}
 #endif
+
+		internal bool DistinctEqual(object left, object right) { return Compare(left, right, CreateOperationBinder(TjsOperationKind.DistinctEqual), ref _distinctEqualSite); }
+
+		internal bool DistinctNotEqual(object left, object right) { return Compare(left, right, CreateOperationBinder(TjsOperationKind.DistinctNotEqual), ref _distinctNotEqualSite); }
+
+		internal bool Equal(object left, object right) { return Compare(left, right, CreateBinaryOperationBinder(ExpressionType.Equal), ref _equalSite); }
+
+		internal bool NotEqual(object left, object right) { return Compare(left, right, CreateBinaryOperationBinder(ExpressionType.NotEqual), ref _notEqualSite); }
+
+		internal bool LessThan(object left, object right) { return Compare(left, right, CreateBinaryOperationBinder(ExpressionType.LessThan), ref _lessThanSite); }
+
+		internal bool LessThanOrEqual(object left, object right) { return Compare(left, right, CreateBinaryOperationBinder(ExpressionType.LessThanOrEqual), ref _lessThanEqualSite); }
+
+		internal bool GreaterThan(object left, object right) { return Compare(left, right, CreateBinaryOperationBinder(ExpressionType.GreaterThan), ref _greaterThanSite); }
+
+		internal bool GreaterThanOrEqual(object left, object right) { return Compare(left, right, CreateBinaryOperationBinder(ExpressionType.GreaterThanOrEqual), ref _greaterThanEqualSite); }
+
+		bool Compare(object left, object right, DynamicMetaObjectBinder compareBinder, ref CallSite<Func<CallSite, object, object, object>> compareSite)
+		{
+			if (compareSite == null)
+				System.Threading.Interlocked.CompareExchange(
+					ref compareSite,
+					CallSite<Func<CallSite, object, object, object>>.Create(compareBinder),
+					null
+				);
+			return Convert<bool>(compareSite.Target(compareSite, left, right));
+		}
+
+		internal T Convert<T>(object target)
+		{
+			if (_convertSites == null)
+				System.Threading.Interlocked.CompareExchange(ref _convertSites, new Dictionary<Type, CallSite>(), null);
+			var type = typeof(T);
+			CallSite site;
+			if (!_convertSites.TryGetValue(type, out site))
+				_convertSites[type] = site = CallSite<Func<CallSite, object, T>>.Create(CreateConvertBinder(typeof(T), true));
+			return ((CallSite<Func<CallSite, object, T>>)site).Target(site, target);
+		}
 	}
 }

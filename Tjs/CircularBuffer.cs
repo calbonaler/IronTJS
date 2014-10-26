@@ -48,10 +48,30 @@ namespace IronTjs
 			{
 				var data = new T[_data.Length * 2];
 				CopyTo(data, 0);
-				_top = 0;
 				_bottom = Count;
+				_top = 0;
 				_data = data;
 			}
+		}
+
+		public void Sort(IComparer<T> comparer, bool stable)
+		{
+			if (stable)
+			{
+				var data = this.OrderBy(x => x, comparer).ToArray();
+				Array.Copy(data, _data, Count);
+				Array.Clear(_data, Count, _data.Length - Count);
+			}
+			else
+			{
+				// ソートしやすいようにデータを詰める
+				var data = new T[_data.Length];
+				CopyTo(data, 0);
+				Array.Sort(data, 0, Count, comparer);
+				_data = data;
+			}
+			_bottom = Count;
+			_top = 0;
 		}
 
 		public int IndexOf(T item)

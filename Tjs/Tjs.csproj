@@ -119,6 +119,7 @@
     <Compile Include="Runtime\Binding\TjsSetMemberBinder.cs" />
     <Compile Include="Runtime\Binding\TjsUnaryOperationBinder.cs" />
     <Compile Include="Runtime\Class.cs" />
+    <Compile Include="Runtime\DefaultContext.cs" />
     <Compile Include="Runtime\DynamicStorage.cs" />
     <Compile Include="Runtime\IContextChangeable.cs" />
     <Compile Include="Runtime\Instance.cs" />

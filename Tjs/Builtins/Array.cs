@@ -2,8 +2,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Scripting.Actions;
 
 namespace IronTjs.Builtins
 {
@@ -14,6 +16,7 @@ namespace IronTjs.Builtins
 		public Array(IEnumerable<object> collection) { _buffer = new CircularBuffer<object>(collection); }
 
 		CircularBuffer<object> _buffer = new CircularBuffer<object>();
+		CallSite<Func<CallSite, object, object, object, object>> _sortFuncInvokeSite;
 
 		public object this[int index]
 		{
@@ -94,11 +97,64 @@ namespace IronTjs.Builtins
 			}
 		}
 
+		Func<object, object, bool> GetSortFunc(Runtime.TjsContext context, object func)
+		{
+			if (context != null)
+			{
+				if (_sortFuncInvokeSite == null)
+					System.Threading.Interlocked.CompareExchange(
+						ref _sortFuncInvokeSite,
+						CallSite<Func<CallSite, object, object, object, object>>.Create(context.CreateInvokeBinder(new CallSignature(3))),
+						null
+					);
+				return (x, y) => context.Convert<bool>(_sortFuncInvokeSite.Target(_sortFuncInvokeSite, func, x, y));
+			}
+			else
+			{
+				var deleg = func as Delegate;
+				if (deleg != null)
+				{
+					if (context != null)
+						return (x, y) => context.Convert<bool>(deleg.DynamicInvoke(x, y));
+					else
+						return (x, y) => (bool)Runtime.Binding.TjsBinder.ConvertInternal(deleg.DynamicInvoke(x, y), typeof(bool));
+				}
+				return null;
+			}
+		}
+
+		Comparer<object> GetComparerForSortFunc(Func<object, object, bool> func) { return Comparer<object>.Create((x, y) => func(x, y) ? -1 : (func(y, x) ? 1 : 0)); }
+
 		public void sort(object comparer = null, bool stable = false)
 		{
 			if (comparer == null || comparer == Void.Value)
 				comparer = "+";
-			throw new NotImplementedException();
+			Comparer<object> comp = null;
+			var context = Runtime.DefaultContext.DefaultTjsContext;
+			if (context != null)
+			{
+				if ("+".Equals(comparer))
+					comp = GetComparerForSortFunc(context.LessThan);
+				else if ("-".Equals(comparer))
+					comp = GetComparerForSortFunc(context.GreaterThan);
+				else if ("0".Equals(comparer))
+					comp = GetComparerForSortFunc((x, y) => context.Convert<long>(x) < context.Convert<long>(y));
+				else if ("9".Equals(comparer))
+					comp = GetComparerForSortFunc((x, y) => context.Convert<long>(x) > context.Convert<long>(y));
+				else if ("a".Equals(comparer))
+					comp = GetComparerForSortFunc((x, y) => string.Compare(context.Convert<string>(x), context.Convert<string>(y), StringComparison.Ordinal) < 0);
+				else if ("z".Equals(comparer))
+					comp = GetComparerForSortFunc((x, y) => string.Compare(context.Convert<string>(x), context.Convert<string>(y), StringComparison.Ordinal) > 0);
+			}
+			if (comp == null)
+			{
+				var sortFunc = GetSortFunc(context, comparer);
+				if (sortFunc != null)
+					comp = GetComparerForSortFunc(sortFunc);
+			}
+			if (comp == null)
+				comp = Comparer<object>.Default;
+			_buffer.Sort(comp, stable);
 		}
 
 		public Array saveStruct(string fileName, string mode = "")
@@ -171,9 +227,15 @@ namespace IronTjs.Builtins
 
 		public void remove(object item, bool removeAll = true)
 		{
+			var context = Runtime.DefaultContext.DefaultTjsContext;
+			Func<object, object, bool> equals;
+			if (context != null)
+				equals = context.DistinctEqual;
+			else
+				equals = EqualityComparer<object>.Default.Equals;
 			for (int i = _buffer.Count - 1; i >= 0; i--)
 			{
-				if (EqualityComparer<object>.Default.Equals(_buffer[i], item))
+				if (equals(_buffer[i], item))
 				{
 					_buffer.RemoveAt(i);
 					if (!removeAll)
@@ -192,9 +254,15 @@ namespace IronTjs.Builtins
 
 		public int find(object item, int startIndex = 0)
 		{
+			var context = Runtime.DefaultContext.DefaultTjsContext;
+			Func<object, object, bool> equals;
+			if (context != null)
+				equals = context.DistinctEqual;
+			else
+				equals = EqualityComparer<object>.Default.Equals;
 			for (int i = startIndex; i < _buffer.Count; i++)
 			{
-				if (EqualityComparer<object>.Default.Equals(_buffer[i], item))
+				if (equals(_buffer[i], item))
 					return i;
 			}
 			return -1;
