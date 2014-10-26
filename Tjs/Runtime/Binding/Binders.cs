@@ -23,6 +23,8 @@ namespace IronTjs.Runtime.Binding
 				.Concat(callInfo.ArgumentNames.Select(x => new Argument(ArgumentType.Named, x))).ToArray());
 		}
 
+		public static CallInfo GetCallInfoForCallSignature(CallSignature signature) { return new CallInfo(signature.ArgumentCount, signature.GetArgumentNames()); }
+
 		public static bool IsFloatingPoint(Type type)
 		{
 			if (type.IsEnum)

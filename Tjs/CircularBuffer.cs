@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Scripting.Utils;
 
-namespace IronTjs.Builtins
+namespace IronTjs
 {
 	public class CircularBuffer<T> : IList<T>
 	{

@@ -75,7 +75,7 @@ namespace IronTjs.Compiler.Ast
 					return System.Linq.Expressions.Expression.Dynamic(
 						LanguageContext.CreateCreateBinder(new System.Dynamic.CallInfo(ie.Arguments.Count)),
 						typeof(object),
-						Microsoft.Scripting.Utils.ArrayUtils.Insert(ie.Target.TransformRead(), ie.Arguments.Select(x => x.TransformRead()).ToArray())
+						ie.TransformTargetAndArguments().Item1
 					);
 				else
 					throw new InvalidOperationException("new 演算子を適用できるのは関数呼び出しのみです。");

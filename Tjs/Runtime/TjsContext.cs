@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using IronTjs.Compiler;
 using IronTjs.Runtime.Binding;
 using Microsoft.Scripting;
+using Microsoft.Scripting.Actions;
 using Microsoft.Scripting.Runtime;
 
 namespace IronTjs.Runtime
@@ -41,7 +42,9 @@ namespace IronTjs.Runtime
 
 		public override ConvertBinder CreateConvertBinder(Type toType, bool? explicitCast) { return new TjsConvertBinder(this, toType, explicitCast ?? true); }
 
-		public override InvokeBinder CreateInvokeBinder(CallInfo callInfo) { return new TjsInvokeBinder(this, callInfo); }
+		public override InvokeBinder CreateInvokeBinder(CallInfo callInfo) { return new TjsInvokeBinder(this, Binders.GetCallSignatureForCallInfo(callInfo)); }
+
+		public InvokeBinder CreateInvokeBinder(CallSignature signature) { return new TjsInvokeBinder(this, signature); }
 
 		public override UnaryOperationBinder CreateUnaryOperationBinder(System.Linq.Expressions.ExpressionType operation) { return new TjsUnaryOperationBinder(this, operation); }
 

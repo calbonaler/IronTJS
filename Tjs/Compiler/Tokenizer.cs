@@ -16,7 +16,7 @@ namespace IronTjs.Compiler
 		string _line = string.Empty;
 		int _columnIndex = 0;
 		SourceLocation _baseLocation;
-		Token _nextToken = null;
+		CircularBuffer<Token> _tokens = new CircularBuffer<Token>();
 
 		public override void Initialize(object state, TextReader sourceReader, SourceUnit sourceUnit, SourceLocation initialLocation)
 		{
@@ -26,24 +26,20 @@ namespace IronTjs.Compiler
 			Read();
 		}
 
-		public Token Read()
+		// ソースコード解析のための整形 (改行、空白、コメントの除去)
+		Token CheckEndOfStream()
 		{
-			var token = _nextToken;
-			// ソースコード解析のための整形 (改行、空白、コメントの除去)
 			int commentLevel = 0;
 			do
 			{
-				if (_line == null) // すでに行がなければ最後のトークンを返し続ける
-					return token;
+				if (_line == null) // すでに行がない
+					return new Token(TokenType.EndOfStream, null, new SourceSpan(_baseLocation, _baseLocation));
 				if (_columnIndex >= _line.Length) // 行終わりなので次の行を読む
 				{
 					_baseLocation = new SourceLocation(_baseLocation.Index + _line.Length, _baseLocation.Line + 1, 1);
 					_line = _reader.ReadLine();
 					if (_line == null)
-					{
-						_nextToken = new Token(TokenType.EndOfStream, null, new SourceSpan(_baseLocation, _baseLocation));
-						return token;
-					}
+						return new Token(TokenType.EndOfStream, null, new SourceSpan(_baseLocation, _baseLocation));
 					_columnIndex = 0;
 				}
 				while (_columnIndex < _line.Length && char.IsWhiteSpace(_line[_columnIndex])) // 先頭の空白を飛ばす
@@ -72,16 +68,29 @@ namespace IronTjs.Compiler
 						_columnIndex = _line.Length;
 				}
 			} while (_columnIndex >= _line.Length || commentLevel > 0);
-			var start = CurrentPosition;
-			if (char.IsLetter(_line[_columnIndex]) || _line[_columnIndex] == '_') // 識別子 or キーワード
+			return null;
+		}
+
+		// 識別子 or キーワード
+		Token ParseIdentifierOrKeyword()
+		{
+			if (char.IsLetter(_line[_columnIndex]) || _line[_columnIndex] == '_')
 			{
+				var start = CurrentPosition;
 				StringBuilder sb = new StringBuilder();
 				while (_columnIndex < _line.Length && (char.IsLetterOrDigit(_line[_columnIndex]) || _line[_columnIndex] == '_'))
 					sb.Append(_line[_columnIndex++]);
-				_nextToken = new Token(Token.GetTokenTypeForWord(sb.ToString()), sb.ToString(), new SourceSpan(start, CurrentPosition));
+				return new Token(Token.GetTokenTypeForWord(sb.ToString()), sb.ToString(), new SourceSpan(start, CurrentPosition));
 			}
-			else if (char.IsDigit(_line[_columnIndex])) // 数値リテラル
+			return null;
+		}
+
+		// 数値リテラル
+		Token ParseNumericLiteral()
+		{
+			if (char.IsDigit(_line[_columnIndex]))
 			{
+				var start = CurrentPosition;
 				int baseN = 10;
 				long value = 0;
 				if (_line[_columnIndex] == '0') // 10進数以外の数値リテラルプレフィックスの解析
@@ -147,12 +156,19 @@ namespace IronTjs.Compiler
 					}
 				}
 				if (divisor > 1 || expBase != 0)
-					_nextToken = new Token(TokenType.LiteralReal, ((double)value + (double)fraction / divisor) * Math.Pow(expBase, exponent), new SourceSpan(start, CurrentPosition));
+					return new Token(TokenType.LiteralReal, ((double)value + (double)fraction / divisor) * Math.Pow(expBase, exponent), new SourceSpan(start, CurrentPosition));
 				else
-					_nextToken = new Token(TokenType.LiteralInteger, value, new SourceSpan(start, CurrentPosition));
+					return new Token(TokenType.LiteralInteger, value, new SourceSpan(start, CurrentPosition));
 			}
-			else if (_line[_columnIndex] == '"' || _line[_columnIndex] == '\'') // 文字列リテラル (連続文字列の連結はパーサーで)
+			return null;
+		}
+
+		// 文字列リテラル (連続文字列の連結はパーサーで)
+		Token ParseStringLiteral()
+		{
+			if (_line[_columnIndex] == '"' || _line[_columnIndex] == '\'')
 			{
+				var start = CurrentPosition;
 				var quote = _line[_columnIndex++];
 				StringBuilder sb = new StringBuilder();
 				while (true)
@@ -160,14 +176,12 @@ namespace IronTjs.Compiler
 					if (_columnIndex >= _line.Length)
 					{
 						AddError("文字列トークンが予期せず終了しました。", new SourceSpan(start, CurrentPosition), -1, Severity.Error);
-						_nextToken = new Token(TokenType.Unknown, sb.ToString(), new SourceSpan(start, CurrentPosition));
-						break;
+						return new Token(TokenType.Unknown, sb.ToString(), new SourceSpan(start, CurrentPosition));
 					}
 					else if (_line[_columnIndex] == quote)
 					{
 						_columnIndex++;
-						_nextToken = new Token(TokenType.LiteralString, sb.ToString(), new SourceSpan(start, CurrentPosition));
-						break;
+						return new Token(TokenType.LiteralString, sb.ToString(), new SourceSpan(start, CurrentPosition));
 					}
 					var ch = _line[_columnIndex++];
 					if (_columnIndex < _line.Length && ch == '\\')
@@ -212,32 +226,55 @@ namespace IronTjs.Compiler
 						sb.Append(ch);
 				}
 			}
-			else // 記号類 (演算子、セパレータなど)
+			return null;
+		}
+
+		// 記号類 (演算子、セパレータなど)
+		Token ParseSymbol()
+		{
+			var start = CurrentPosition;
+			StringBuilder sb = new StringBuilder();
+			string completeSymbol = null;
+			int index = 0;
+			while (_columnIndex < _line.Length && !char.IsWhiteSpace(_line[_columnIndex]))
 			{
-				StringBuilder sb = new StringBuilder();
-				string completeSymbol = null;
-				int index = 0;
-				while (_columnIndex < _line.Length && !char.IsWhiteSpace(_line[_columnIndex]))
+				sb.Append(_line[_columnIndex++]);
+				if (Token.GetTokenTypeForSymbol(sb.ToString()) != TokenType.Unknown)
 				{
-					sb.Append(_line[_columnIndex++]);
-					if (Token.GetTokenTypeForSymbol(sb.ToString()) != TokenType.Unknown)
-					{
-						completeSymbol = sb.ToString();
-						index = _columnIndex;
-					}
+					completeSymbol = sb.ToString();
+					index = _columnIndex;
 				}
-				if (completeSymbol != null)
-				{
-					_columnIndex = index; // 最長で解析できた場所にカーソルを戻す
-					_nextToken = new Token(Token.GetTokenTypeForSymbol(completeSymbol), completeSymbol, new SourceSpan(start, CurrentPosition));
-				}
-				else // ダメなら全部で1トークン
-					_nextToken = new Token(TokenType.Unknown, sb.ToString(), new SourceSpan(start, CurrentPosition));
 			}
+			if (completeSymbol != null)
+			{
+				_columnIndex = index; // 最長で解析できた場所にカーソルを戻す
+				return new Token(Token.GetTokenTypeForSymbol(completeSymbol), completeSymbol, new SourceSpan(start, CurrentPosition));
+			}
+			else // ダメなら全部で1トークン
+				return new Token(TokenType.Unknown, sb.ToString(), new SourceSpan(start, CurrentPosition));
+		}
+
+		public Token Read()
+		{
+			var parsedToken = CheckEndOfStream() ?? ParseIdentifierOrKeyword() ?? ParseNumericLiteral() ?? ParseStringLiteral() ?? ParseSymbol();
+			Token token = null;
+			if (_tokens.Count > 0)
+			{
+				token = _tokens[0];
+				_tokens.RemoveAt(0);
+			}
+			_tokens.Add(parsedToken);
 			return token;
 		}
 
-		public Token NextToken { get { return _nextToken; } }
+		public Token NextToken { get { return _tokens[0]; } }
+
+		public Token GetNextToken(int level)
+		{
+			while (_tokens.Count <= level && _tokens[_tokens.Count - 1].Type != TokenType.EndOfStream)
+				_tokens.Add(CheckEndOfStream() ?? ParseIdentifierOrKeyword() ?? ParseNumericLiteral() ?? ParseStringLiteral() ?? ParseSymbol());
+			return _tokens[Math.Min(level, _tokens.Count - 1)];
+		}
 
 		public override SourceLocation CurrentPosition { get { return new SourceLocation(_baseLocation.Index + _columnIndex, _baseLocation.Line, _baseLocation.Column + _columnIndex); } }
 

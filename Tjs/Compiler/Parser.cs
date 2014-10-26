@@ -20,17 +20,19 @@ namespace IronTjs.Compiler
 		CompilerContext _context;
 		bool _parsedIncompleteIf = false;
 
-		Token Accept(params TokenType[] types)
+		bool Accept(TokenType type)
 		{
-			if (types.Contains(_tokenizer.NextToken.Type))
-				return _tokenizer.Read();
-			return null;
+			if (_tokenizer.NextToken.Type == type)
+			{
+				_tokenizer.Read();
+				return true;
+			}
+			return false;
 		}
 
-		Token Expect(params TokenType[] types)
+		Token Expect(TokenType type)
 		{
-			Assert.NotEmpty(types);
-			if (types.Contains(_tokenizer.NextToken.Type))
+			if (_tokenizer.NextToken.Type == type)
 				return _tokenizer.Read();
 			var errorSpan = new SourceSpan(_tokenizer.NextToken.Span.Start, _tokenizer.NextToken.Span.Start);
 			_tokenizer.ErrorSink.Add(_context.SourceUnit, "Unexpected token: " + _tokenizer.NextToken.Type, errorSpan, -1, Severity.Error);
@@ -102,17 +104,17 @@ namespace IronTjs.Compiler
 			List<Statement> statements = new List<Statement>();
 			while (_tokenizer.NextToken.Type != TokenType.EndOfStream)
 			{
-				if (Accept(TokenType.KeywordClass) != null)
+				if (Accept(TokenType.KeywordClass))
 				{
 					classes.Add(ParseClassDefinition());
 					_parsedIncompleteIf = false;
 				}
-				else if (Accept(TokenType.KeywordFunction) != null)
+				else if (Accept(TokenType.KeywordFunction))
 				{
 					functions.Add(ParseFunctionDefinition());
 					_parsedIncompleteIf = false;
 				}
-				else if (Accept(TokenType.KeywordProperty) != null)
+				else if (Accept(TokenType.KeywordProperty))
 				{
 					properties.Add(ParsePropertyDefinition());
 					_parsedIncompleteIf = false;
@@ -127,11 +129,11 @@ namespace IronTjs.Compiler
 		{
 			var name = Expect(TokenType.Identifier).Value.ToString();
 			List<string> baseClasses = new List<string>();
-			if (Accept(TokenType.KeywordExtends) != null)
+			if (Accept(TokenType.KeywordExtends))
 			{
 				do
 					baseClasses.Add(Expect(TokenType.Identifier).Value.ToString());
-				while (Accept(TokenType.SymbolComma) != null);
+				while (Accept(TokenType.SymbolComma));
 			}
 			List<ClassDefinition> classes = new List<ClassDefinition>();
 			List<FunctionDefinition> functions = new List<FunctionDefinition>();
@@ -140,13 +142,13 @@ namespace IronTjs.Compiler
 			Expect(TokenType.SymbolOpenBrace);
 			while (true)
 			{
-				if (Accept(TokenType.KeywordClass) != null)
+				if (Accept(TokenType.KeywordClass))
 					classes.Add(ParseClassDefinition());
-				else if (Accept(TokenType.KeywordFunction) != null)
+				else if (Accept(TokenType.KeywordFunction))
 					functions.Add(ParseFunctionDefinition());
-				else if (Accept(TokenType.KeywordProperty) != null)
+				else if (Accept(TokenType.KeywordProperty))
 					properties.Add(ParsePropertyDefinition());
-				else if (Accept(TokenType.KeywordVar) != null)
+				else if (Accept(TokenType.KeywordVar))
 				{
 					var varDec = ParseVariableDeclaration();
 					Expect(TokenType.SymbolSemicolon);
@@ -163,21 +165,41 @@ namespace IronTjs.Compiler
 		{
 			var name = Expect(TokenType.Identifier).Value.ToString();
 			List<ParameterDefinition> parameters = new List<ParameterDefinition>();
-			if (Accept(TokenType.SymbolOpenParenthesis) != null)
+			if (Accept(TokenType.SymbolOpenParenthesis))
 			{
 				while (true)
 				{
-					var token = Accept(TokenType.SymbolCloseParenthesis, TokenType.SymbolComma);
-					if (token != null && token.Type == TokenType.SymbolCloseParenthesis)
+					if (Accept(TokenType.SymbolCloseParenthesis))
 						break;
-					else if (Accept(TokenType.SymbolAsterisk) != null)
+					else
+						Accept(TokenType.SymbolComma);
+					if (Accept(TokenType.SymbolAsterisk))
 						parameters.Add(new ParameterDefinition(null, true));
 					else
 					{
 						var paramName = Expect(TokenType.Identifier).Value.ToString();
-						if (Accept(TokenType.SymbolEquals) != null)
-							parameters.Add(new ParameterDefinition(paramName, ParseLiteral()));
-						else if (Accept(TokenType.SymbolAsterisk) != null)
+						if (Accept(TokenType.SymbolEquals))
+						{
+							var start = _tokenizer.NextToken.Span.Start;
+							var exp = new SourceUnitTree(
+								Enumerable.Empty<ClassDefinition>(),
+								Enumerable.Empty<FunctionDefinition>(),
+								Enumerable.Empty<PropertyDefinition>(),
+								new[] { new ExpressionStatement(ParseAssignmentExpression()) },
+								_context
+							);
+							var end = _tokenizer.NextToken.Span.End;
+							try
+							{
+								parameters.Add(new ParameterDefinition(paramName, exp.Transform<Func<object, object>>().Compile()(null)));
+							}
+							catch (MissingMemberException)
+							{
+								_tokenizer.ErrorSink.Add(_context.SourceUnit, "関数の既定値には定数のみが使用できます。", new SourceSpan(start, end), -2, Severity.Error);
+								throw new InternalInvalidSyntaxException();
+							}
+						}
+						else if (Accept(TokenType.SymbolAsterisk))
 							parameters.Add(new ParameterDefinition(paramName, true));
 						else
 							parameters.Add(new ParameterDefinition(paramName, false));
@@ -186,7 +208,7 @@ namespace IronTjs.Compiler
 			}
 			List<Statement> statements = new List<Statement>();
 			Expect(TokenType.SymbolOpenBrace);
-			while (Accept(TokenType.SymbolCloseBrace) == null)
+			while (!Accept(TokenType.SymbolCloseBrace))
 				statements.Add(ParseStatement());
 			return new FunctionDefinition(name, parameters, statements);
 		}
@@ -197,17 +219,17 @@ namespace IronTjs.Compiler
 			FunctionDefinition getter = null;
 			FunctionDefinition setter = null;
 			Expect(TokenType.SymbolOpenBrace);
-			if (Accept(TokenType.KeywordGetter) != null)
+			if (Accept(TokenType.KeywordGetter))
 			{
 				getter = ParsePropertyGetter();
-				if (Accept(TokenType.KeywordSetter) != null)
+				if (Accept(TokenType.KeywordSetter))
 					setter = ParsePropertySetter();
 			}
 			else
 			{
 				Expect(TokenType.KeywordSetter);
 				setter = ParsePropertySetter();
-				if (Accept(TokenType.KeywordGetter) != null)
+				if (Accept(TokenType.KeywordGetter))
 					getter = ParsePropertyGetter();
 			}
 			Expect(TokenType.SymbolCloseBrace);
@@ -216,11 +238,11 @@ namespace IronTjs.Compiler
 
 		FunctionDefinition ParsePropertyGetter()
 		{
-			if (Accept(TokenType.SymbolOpenParenthesis) != null)
+			if (Accept(TokenType.SymbolOpenParenthesis))
 				Expect(TokenType.SymbolCloseParenthesis);
 			List<Statement> body = new List<Statement>();
 			Expect(TokenType.SymbolOpenBrace);
-			while (Accept(TokenType.SymbolCloseBrace) == null)
+			while (!Accept(TokenType.SymbolCloseBrace))
 				body.Add(ParseStatement());
 			return new FunctionDefinition("getter", new ParameterDefinition[0], body);
 		}
@@ -232,22 +254,22 @@ namespace IronTjs.Compiler
 			Expect(TokenType.SymbolCloseParenthesis);
 			List<Statement> body = new List<Statement>();
 			Expect(TokenType.SymbolOpenBrace);
-			while (Accept(TokenType.SymbolCloseBrace) == null)
+			while (!Accept(TokenType.SymbolCloseBrace))
 				body.Add(ParseStatement());
 			return new FunctionDefinition("setter", new[] { new ParameterDefinition(name, false) } , body);
 		}
 
 		Statement ParseStatement()
 		{
-			if (Accept(TokenType.SymbolOpenBrace) != null)
+			if (Accept(TokenType.SymbolOpenBrace))
 			{
 				List<Statement> statements = new List<Statement>();
-				while (Accept(TokenType.SymbolCloseBrace) == null)
+				while (!Accept(TokenType.SymbolCloseBrace))
 					statements.Add(ParseStatement());
 				_parsedIncompleteIf = false;
 				return new Block(statements);
 			}
-			else if (Accept(TokenType.KeywordIf) != null)
+			else if (Accept(TokenType.KeywordIf))
 			{
 				Expect(TokenType.SymbolOpenParenthesis);
 				var test = ParseExpression();
@@ -255,14 +277,14 @@ namespace IronTjs.Compiler
 				var ifTrue = ParseStatement();
 				_parsedIncompleteIf = true;
 				Statement ifFalse = null;
-				if (Accept(TokenType.KeywordElse) != null)
+				if (Accept(TokenType.KeywordElse))
 				{
 					ifFalse = ParseStatement();
 					_parsedIncompleteIf = false;
 				}
 				return new IfStatement(test, ifTrue, ifFalse);
 			}
-			else if (Accept(TokenType.KeywordSwitch) != null)
+			else if (Accept(TokenType.KeywordSwitch))
 			{
 				Expect(TokenType.SymbolOpenParenthesis);
 				var cond = ParseExpression();
@@ -274,22 +296,28 @@ namespace IronTjs.Compiler
 				bool containsDefault = false;
 				while (true)
 				{
-					var result = Accept(TokenType.KeywordCase, TokenType.KeywordDefault, TokenType.SymbolCloseBrace);
-					if (result != null && statements.Count > 0)
+					TokenType? type = null;
+					if (Accept(TokenType.KeywordCase))
+						type = TokenType.KeywordCase;
+					else if (Accept(TokenType.KeywordDefault))
+						type = TokenType.KeywordDefault;
+					else if (Accept(TokenType.SymbolCloseBrace))
+						type = TokenType.SymbolCloseBrace;
+					if (type != null && statements.Count > 0)
 					{
 						cases.Add(new SwitchCase(testExpressions, containsDefault, statements));
 						testExpressions.Clear();
 						statements.Clear();
 						containsDefault = false;
 					}
-					if (result == null)
+					if (type == null)
 						statements.Add(ParseStatement());
-					else if (result.Type == TokenType.KeywordCase)
+					else if (type == TokenType.KeywordCase)
 					{
 						testExpressions.Add(ParseExpression());
 						Expect(TokenType.SymbolColon);
 					}
-					else if (result.Type == TokenType.KeywordDefault)
+					else if (type == TokenType.KeywordDefault)
 					{
 						containsDefault = true;
 						Expect(TokenType.SymbolColon);
@@ -301,7 +329,7 @@ namespace IronTjs.Compiler
 					}
 				}
 			}
-			else if (Accept(TokenType.KeywordWhile) != null)
+			else if (Accept(TokenType.KeywordWhile))
 			{
 				Expect(TokenType.SymbolOpenParenthesis);
 				var cond = ParseExpression();
@@ -310,7 +338,7 @@ namespace IronTjs.Compiler
 				_parsedIncompleteIf = false;
 				return new WhileStatement(cond, body);
 			}
-			else if (Accept(TokenType.KeywordDo) != null)
+			else if (Accept(TokenType.KeywordDo))
 			{
 				var body = ParseStatement();
 				Expect(TokenType.KeywordWhile);
@@ -321,26 +349,26 @@ namespace IronTjs.Compiler
 				_parsedIncompleteIf = false;
 				return new DoWhileStatement(body, cond);
 			}
-			else if (Accept(TokenType.KeywordFor) != null)
+			else if (Accept(TokenType.KeywordFor))
 			{
 				Expression init = null;
 				Expression condition = null;
 				Expression update = null;
 				Expect(TokenType.SymbolOpenParenthesis);
-				if (Accept(TokenType.SymbolSemicolon) == null)
+				if (!Accept(TokenType.SymbolSemicolon))
 				{
-					if (Accept(TokenType.KeywordVar) != null)
+					if (Accept(TokenType.KeywordVar))
 						init = ParseVariableDeclaration();
 					else
 						init = ParseExpression();
 					Expect(TokenType.SymbolSemicolon);
 				}
-				if (Accept(TokenType.SymbolSemicolon) == null)
+				if (!Accept(TokenType.SymbolSemicolon))
 				{
 					condition = ParseExpression();
 					Expect(TokenType.SymbolSemicolon);
 				}
-				if (Accept(TokenType.SymbolCloseParenthesis) == null)
+				if (!Accept(TokenType.SymbolCloseParenthesis))
 				{
 					update = ParseExpression();
 					Expect(TokenType.SymbolCloseParenthesis);
@@ -349,12 +377,12 @@ namespace IronTjs.Compiler
 				_parsedIncompleteIf = false;
 				return new ForStatement(init, condition, update, body);
 			}
-			else if (Accept(TokenType.KeywordTry) != null)
+			else if (Accept(TokenType.KeywordTry))
 			{
 				var body = ParseStatement();
 				Expect(TokenType.KeywordCatch);
 				string catchVariableName = null;
-				if (Accept(TokenType.SymbolOpenParenthesis) != null)
+				if (Accept(TokenType.SymbolOpenParenthesis))
 				{
 					catchVariableName = Expect(TokenType.Identifier).Value.ToString();
 					Expect(TokenType.SymbolCloseParenthesis);
@@ -363,7 +391,7 @@ namespace IronTjs.Compiler
 				_parsedIncompleteIf = false;
 				return new TryStatement(body, new CatchBlock(catchVariableName, catchBody));
 			}
-			else if (Accept(TokenType.KeywordWith) != null)
+			else if (Accept(TokenType.KeywordWith))
 			{
 				Expect(TokenType.SymbolOpenParenthesis);
 				var exp = ParseExpression();
@@ -372,35 +400,35 @@ namespace IronTjs.Compiler
 				_parsedIncompleteIf = false;
 				return new WithStatement(exp, body);
 			}
-			else if (Accept(TokenType.KeywordBreak) != null)
+			else if (Accept(TokenType.KeywordBreak))
 			{
 				Expect(TokenType.SymbolSemicolon);
 				return new BreakStatement();
 			}
-			else if (Accept(TokenType.KeywordContinue) != null)
+			else if (Accept(TokenType.KeywordContinue))
 			{
 				Expect(TokenType.SymbolSemicolon);
 				return new ContinueStatement();
 			}
-			else if (Accept(TokenType.KeywordReturn) != null)
+			else if (Accept(TokenType.KeywordReturn))
 			{
 				var exp = ParseExpression();
 				Expect(TokenType.SymbolSemicolon);
 				return new ReturnStatement(exp);
 			}
-			else if (Accept(TokenType.KeywordThrow) != null)
+			else if (Accept(TokenType.KeywordThrow))
 			{
 				var exp = ParseExpression();
 				Expect(TokenType.SymbolSemicolon);
 				return new ThrowStatement(exp);
 			}
-			else if (Accept(TokenType.KeywordVar) != null)
+			else if (Accept(TokenType.KeywordVar))
 			{
 				var varDec = ParseVariableDeclaration();
 				Expect(TokenType.SymbolSemicolon);
 				return new ExpressionStatement(varDec);
 			}
-			else if (Accept(TokenType.SymbolSemicolon) != null)
+			else if (Accept(TokenType.SymbolSemicolon))
 				return new EmptyStatement();
 			else
 			{
@@ -417,17 +445,17 @@ namespace IronTjs.Compiler
 			{
 				var name = Expect(TokenType.Identifier).Value.ToString();
 				Expression exp = null;
-				if (Accept(TokenType.SymbolEquals) != null)
+				if (Accept(TokenType.SymbolEquals))
 					exp = ParseAssignmentExpression();
 				initializers.Add(new KeyValuePair<string, Expression>(name, exp));
-			} while (Accept(TokenType.SymbolComma) != null);
+			} while (Accept(TokenType.SymbolComma));
 			return new VariableDeclarationExpression(initializers);
 		}
 
 		Expression ParseExpression()
 		{
 			var exp = ParseSequenceExpression();
-			if (Accept(TokenType.KeywordIf) != null)
+			if (Accept(TokenType.KeywordIf))
 				return new IfExpression(exp, ParseSequenceExpression());
 			return exp;
 		}
@@ -436,7 +464,7 @@ namespace IronTjs.Compiler
 		{
 			List<Expression> exps = new List<Expression>();
 			exps.Add(ParseAssignmentExpression());
-			while (Accept(TokenType.SymbolComma) != null)
+			while (Accept(TokenType.SymbolComma))
 				exps.Add(ParseAssignmentExpression());
 			if (exps.Count > 1)
 				return new SequenceExpression(exps);
@@ -447,37 +475,37 @@ namespace IronTjs.Compiler
 		Expression ParseAssignmentExpression()
 		{
 			var exp = ParseConditionalExpression();
-			if (Accept(TokenType.SymbolEquals) != null)
+			if (Accept(TokenType.SymbolEquals))
 				return new BinaryExpression(exp, ParseAssignmentExpression(), BinaryOperator.Assign);
-			else if (Accept(TokenType.SymbolAsteriskEquals) != null)
+			else if (Accept(TokenType.SymbolAsteriskEquals))
 				return new BinaryExpression(exp, ParseAssignmentExpression(), BinaryOperator.MultiplyAssign);
-			else if (Accept(TokenType.SymbolSlashEquals) != null)
+			else if (Accept(TokenType.SymbolSlashEquals))
 				return new BinaryExpression(exp, ParseAssignmentExpression(), BinaryOperator.DivideAssign);
-			else if (Accept(TokenType.SymbolBackSlashEquals) != null)
+			else if (Accept(TokenType.SymbolBackSlashEquals))
 				return new BinaryExpression(exp, ParseAssignmentExpression(), BinaryOperator.FloorDivideAssign);
-			else if (Accept(TokenType.SymbolPercentEquals) != null)
+			else if (Accept(TokenType.SymbolPercentEquals))
 				return new BinaryExpression(exp, ParseAssignmentExpression(), BinaryOperator.ModuloAssign);
-			else if (Accept(TokenType.SymbolPlusEquals) != null)
+			else if (Accept(TokenType.SymbolPlusEquals))
 				return new BinaryExpression(exp, ParseAssignmentExpression(), BinaryOperator.AddAssign);
-			else if (Accept(TokenType.SymbolMinusEquals) != null)
+			else if (Accept(TokenType.SymbolMinusEquals))
 				return new BinaryExpression(exp, ParseAssignmentExpression(), BinaryOperator.SubtractAssign);
-			else if (Accept(TokenType.SymbolDoubleLessThanEquals) != null)
+			else if (Accept(TokenType.SymbolDoubleLessThanEquals))
 				return new BinaryExpression(exp, ParseAssignmentExpression(), BinaryOperator.LeftShiftAssign);
-			else if (Accept(TokenType.SymbolDoubleGreaterThanEquals) != null)
+			else if (Accept(TokenType.SymbolDoubleGreaterThanEquals))
 				return new BinaryExpression(exp, ParseAssignmentExpression(), BinaryOperator.RightShiftArithmeticAssign);
-			else if (Accept(TokenType.SymbolTripleGreaterThanEquals) != null)
+			else if (Accept(TokenType.SymbolTripleGreaterThanEquals))
 				return new BinaryExpression(exp, ParseAssignmentExpression(), BinaryOperator.RightShiftLogicalAssign);
-			else if (Accept(TokenType.SymbolAmpersandEquals) != null)
+			else if (Accept(TokenType.SymbolAmpersandEquals))
 				return new BinaryExpression(exp, ParseAssignmentExpression(), BinaryOperator.AndAssign);
-			else if (Accept(TokenType.SymbolCircumflexEquals) != null)
+			else if (Accept(TokenType.SymbolCircumflexEquals))
 				return new BinaryExpression(exp, ParseAssignmentExpression(), BinaryOperator.ExclusiveOrAssign);
-			else if (Accept(TokenType.SymbolVerticalLineEquals) != null)
+			else if (Accept(TokenType.SymbolVerticalLineEquals))
 				return new BinaryExpression(exp, ParseAssignmentExpression(), BinaryOperator.OrAssign);
-			else if (Accept(TokenType.SymbolDoubleAmpersandEquals) != null)
+			else if (Accept(TokenType.SymbolDoubleAmpersandEquals))
 				return new BinaryExpression(exp, ParseAssignmentExpression(), BinaryOperator.AndAlsoAssign);
-			else if (Accept(TokenType.SymbolDoubleVerticalLineEquals) != null)
+			else if (Accept(TokenType.SymbolDoubleVerticalLineEquals))
 				return new BinaryExpression(exp, ParseAssignmentExpression(), BinaryOperator.OrElseAssign);
-			else if (Accept(TokenType.SymbolLessThanMinusGreaterThan) != null)
+			else if (Accept(TokenType.SymbolLessThanMinusGreaterThan))
 				return new BinaryExpression(exp, ParseAssignmentExpression(), BinaryOperator.Exchange);
 			else
 				return exp;
@@ -486,7 +514,7 @@ namespace IronTjs.Compiler
 		Expression ParseConditionalExpression()
 		{
 			var exp = ParseLogicalOrExpression();
-			if (Accept(TokenType.SymbolQuestion) != null)
+			if (Accept(TokenType.SymbolQuestion))
 			{
 				var ifTrue = ParseAssignmentExpression();
 				Expect(TokenType.SymbolColon);
@@ -499,7 +527,7 @@ namespace IronTjs.Compiler
 		Expression ParseLogicalOrExpression()
 		{
 			var exp = ParseLogicalAndExpression();
-			while (Accept(TokenType.SymbolDoubleVerticalLine) != null)
+			while (Accept(TokenType.SymbolDoubleVerticalLine))
 				exp = new BinaryExpression(exp, ParseLogicalAndExpression(), BinaryOperator.OrElse);
 			return exp;
 		}
@@ -507,7 +535,7 @@ namespace IronTjs.Compiler
 		Expression ParseLogicalAndExpression()
 		{
 			var exp = ParseBitwiseOrExpression();
-			while (Accept(TokenType.SymbolDoubleAmpersand) != null)
+			while (Accept(TokenType.SymbolDoubleAmpersand))
 				exp = new BinaryExpression(exp, ParseBitwiseOrExpression(), BinaryOperator.AndAlso);
 			return exp;
 		}
@@ -515,7 +543,7 @@ namespace IronTjs.Compiler
 		Expression ParseBitwiseOrExpression()
 		{
 			var exp = ParseBitwiseXorExpression();
-			while (Accept(TokenType.SymbolVerticalLine) != null)
+			while (Accept(TokenType.SymbolVerticalLine))
 				exp = new BinaryExpression(exp, ParseBitwiseXorExpression(), BinaryOperator.Or);
 			return exp;
 		}
@@ -523,7 +551,7 @@ namespace IronTjs.Compiler
 		Expression ParseBitwiseXorExpression()
 		{
 			var exp = ParseBitwiseAndExpression();
-			while (Accept(TokenType.SymbolCircumflex) != null)
+			while (Accept(TokenType.SymbolCircumflex))
 				exp = new BinaryExpression(exp, ParseBitwiseAndExpression(), BinaryOperator.ExclusiveOr);
 			return exp;
 		}
@@ -531,7 +559,7 @@ namespace IronTjs.Compiler
 		Expression ParseBitwiseAndExpression()
 		{
 			var exp = ParseEqualityExpression();
-			while (Accept(TokenType.SymbolAmpersand) != null)
+			while (Accept(TokenType.SymbolAmpersand))
 				exp = new BinaryExpression(exp, ParseEqualityExpression(), BinaryOperator.And);
 			return exp;
 		}
@@ -541,13 +569,13 @@ namespace IronTjs.Compiler
 			var exp = ParseRelationalExpression();
 			while (true)
 			{
-				if (Accept(TokenType.SymbolDoubleEquals) != null)
+				if (Accept(TokenType.SymbolDoubleEquals))
 					exp = new BinaryExpression(exp, ParseRelationalExpression(), BinaryOperator.Equal);
-				else if (Accept(TokenType.SymbolExclamationEquals) != null)
+				else if (Accept(TokenType.SymbolExclamationEquals))
 					exp = new BinaryExpression(exp, ParseRelationalExpression(), BinaryOperator.NotEqual);
-				else if (Accept(TokenType.SymbolTripleEquals) != null)
+				else if (Accept(TokenType.SymbolTripleEquals))
 					exp = new BinaryExpression(exp, ParseRelationalExpression(), BinaryOperator.DistinctEqual);
-				else if (Accept(TokenType.SymbolExclamationDoubleEquals) != null)
+				else if (Accept(TokenType.SymbolExclamationDoubleEquals))
 					exp = new BinaryExpression(exp, ParseRelationalExpression(), BinaryOperator.DistinctNotEqual);
 				else
 					break;
@@ -560,13 +588,13 @@ namespace IronTjs.Compiler
 			var exp = ParseShiftExpression();
 			while (true)
 			{
-				if (Accept(TokenType.SymbolLessThan) != null)
+				if (Accept(TokenType.SymbolLessThan))
 					exp = new BinaryExpression(exp, ParseShiftExpression(), BinaryOperator.LessThan);
-				else if (Accept(TokenType.SymbolLessThanEquals) != null)
+				else if (Accept(TokenType.SymbolLessThanEquals))
 					exp = new BinaryExpression(exp, ParseShiftExpression(), BinaryOperator.LessThanOrEqual);
-				else if (Accept(TokenType.SymbolGreaterThan) != null)
+				else if (Accept(TokenType.SymbolGreaterThan))
 					exp = new BinaryExpression(exp, ParseShiftExpression(), BinaryOperator.GreaterThan);
-				else if (Accept(TokenType.SymbolGreaterThanEquals) != null)
+				else if (Accept(TokenType.SymbolGreaterThanEquals))
 					exp = new BinaryExpression(exp, ParseShiftExpression(), BinaryOperator.GreaterThanOrEqual);
 				else
 					break;
@@ -579,11 +607,11 @@ namespace IronTjs.Compiler
 			var exp = ParseAdditiveExpression();
 			while (true)
 			{
-				if (Accept(TokenType.SymbolDoubleLessThan) != null)
+				if (Accept(TokenType.SymbolDoubleLessThan))
 					exp = new BinaryExpression(exp, ParseAdditiveExpression(), BinaryOperator.LeftShift);
-				else if (Accept(TokenType.SymbolDoubleGreaterThan) != null)
+				else if (Accept(TokenType.SymbolDoubleGreaterThan))
 					exp = new BinaryExpression(exp, ParseAdditiveExpression(), BinaryOperator.RightShiftArithmetic);
-				else if (Accept(TokenType.SymbolTripleGreaterThan) != null)
+				else if (Accept(TokenType.SymbolTripleGreaterThan))
 					exp = new BinaryExpression(exp, ParseAdditiveExpression(), BinaryOperator.RightShiftLogical);
 				else
 					break;
@@ -596,9 +624,9 @@ namespace IronTjs.Compiler
 			var exp = ParseMultiplicativeExpression();
 			while (true)
 			{
-				if (Accept(TokenType.SymbolPlus) != null)
+				if (Accept(TokenType.SymbolPlus))
 					exp = new BinaryExpression(exp, ParseMultiplicativeExpression(), BinaryOperator.Add);
-				else if (Accept(TokenType.SymbolMinus) != null)
+				else if (Accept(TokenType.SymbolMinus))
 					exp = new BinaryExpression(exp, ParseMultiplicativeExpression(), BinaryOperator.Subtract);
 				else
 					break;
@@ -611,13 +639,18 @@ namespace IronTjs.Compiler
 			var exp = ParsePrefixExpression();
 			while (true)
 			{
-				if (Accept(TokenType.SymbolAsterisk) != null)
+				if (_tokenizer.GetNextToken(0).Type == TokenType.SymbolAsterisk &&
+					_tokenizer.GetNextToken(1).Type != TokenType.SymbolCloseParenthesis &&
+					_tokenizer.GetNextToken(1).Type != TokenType.SymbolComma)
+				{
+					_tokenizer.Read();
 					exp = new BinaryExpression(exp, ParsePrefixExpression(), BinaryOperator.Multiply);
-				else if (Accept(TokenType.SymbolSlash) != null)
+				}
+				else if (Accept(TokenType.SymbolSlash))
 					exp = new BinaryExpression(exp, ParsePrefixExpression(), BinaryOperator.Divide);
-				else if (Accept(TokenType.SymbolBackSlash) != null)
+				else if (Accept(TokenType.SymbolBackSlash))
 					exp = new BinaryExpression(exp, ParsePrefixExpression(), BinaryOperator.FloorDivide);
-				else if (Accept(TokenType.SymbolPercent) != null)
+				else if (Accept(TokenType.SymbolPercent))
 					exp = new BinaryExpression(exp, ParsePrefixExpression(), BinaryOperator.Modulo);
 				else
 					break;
@@ -627,42 +660,74 @@ namespace IronTjs.Compiler
 
 		Expression ParsePrefixExpression()
 		{
-			if (Accept(TokenType.SymbolExclamation) != null)
+			if (Accept(TokenType.SymbolExclamation))
 				return new UnaryExpression(ParsePrefixExpression(), UnaryOperator.Not);
-			else if (Accept(TokenType.SymbolTilde) != null)
+			else if (Accept(TokenType.SymbolTilde))
 				return new UnaryExpression(ParsePrefixExpression(), UnaryOperator.OnesComplement);
-			else if (Accept(TokenType.SymbolNumberSign) != null)
+			else if (Accept(TokenType.SymbolNumberSign))
 				return new UnaryExpression(ParsePrefixExpression(), UnaryOperator.CharToCharCode);
-			else if (Accept(TokenType.SymbolDollarSign) != null)
+			else if (Accept(TokenType.SymbolDollarSign))
 				return new UnaryExpression(ParsePrefixExpression(), UnaryOperator.CharCodeToChar);
-			else if (Accept(TokenType.SymbolPlus) != null)
+			else if (Accept(TokenType.SymbolPlus))
 				return new UnaryExpression(ParsePrefixExpression(), UnaryOperator.UnaryPlus);
-			else if (Accept(TokenType.SymbolMinus) != null)
+			else if (Accept(TokenType.SymbolMinus))
 				return new UnaryExpression(ParsePrefixExpression(), UnaryOperator.Negate);
-			else if (Accept(TokenType.SymbolAmpersand) != null)
+			else if (Accept(TokenType.SymbolAmpersand))
 				return new UnaryExpression(ParsePrefixExpression(), UnaryOperator.AccessPropertyObject);
-			else if (Accept(TokenType.SymbolAsterisk) != null)
+			else if (_tokenizer.GetNextToken(0).Type == TokenType.SymbolAsterisk &&
+				_tokenizer.GetNextToken(1).Type != TokenType.SymbolCloseParenthesis &&
+				_tokenizer.GetNextToken(1).Type != TokenType.SymbolComma)
+			{
+				_tokenizer.Read();
 				return new UnaryExpression(ParsePrefixExpression(), UnaryOperator.InvokePropertyHandler);
-			else if (Accept(TokenType.SymbolDoublePlus) != null)
+			}
+			else if (Accept(TokenType.SymbolDoublePlus))
 				return new UnaryExpression(ParsePrefixExpression(), UnaryOperator.PreIncrementAssign);
-			else if (Accept(TokenType.SymbolDoubleMinus) != null)
+			else if (Accept(TokenType.SymbolDoubleMinus))
 				return new UnaryExpression(ParsePrefixExpression(), UnaryOperator.PreDecrementAssign);
-			else if (Accept(TokenType.KeywordNew) != null)
+			else if (Accept(TokenType.KeywordNew))
 				return new UnaryExpression(ParsePrefixExpression(), UnaryOperator.New);
-			else if (Accept(TokenType.KeywordInvalidate) != null)
+			else if (Accept(TokenType.KeywordInvalidate))
 				return new UnaryExpression(ParsePrefixExpression(), UnaryOperator.Invalidate);
-			else if (Accept(TokenType.KeywordIsValid) != null)
+			else if (Accept(TokenType.KeywordIsValid))
 				return new UnaryExpression(ParsePrefixExpression(), UnaryOperator.IsValid);
-			else if (Accept(TokenType.KeywordDelete) != null)
+			else if (Accept(TokenType.KeywordDelete))
 				return new UnaryExpression(ParsePrefixExpression(), UnaryOperator.Delete);
-			else if (Accept(TokenType.KeywordTypeOf) != null)
+			else if (Accept(TokenType.KeywordTypeOf))
 				return new UnaryExpression(ParsePrefixExpression(), UnaryOperator.TypeOf);
-			else if (Accept(TokenType.KeywordInt) != null)
+			else if (Accept(TokenType.KeywordInt))
 				return new ConvertExpression(ParsePrefixExpression(), ConvertType.Integer);
-			else if (Accept(TokenType.KeywordReal) != null)
+			else if (Accept(TokenType.KeywordReal))
 				return new ConvertExpression(ParsePrefixExpression(), ConvertType.Real);
-			else if (Accept(TokenType.KeywordString) != null)
+			else if (Accept(TokenType.KeywordString))
 				return new ConvertExpression(ParsePrefixExpression(), ConvertType.String);
+			else if (_tokenizer.GetNextToken(0).Type == TokenType.SymbolOpenParenthesis &&
+				_tokenizer.GetNextToken(1).Type == TokenType.KeywordInt &&
+				_tokenizer.GetNextToken(2).Type == TokenType.SymbolCloseParenthesis)
+			{
+				_tokenizer.Read();
+				_tokenizer.Read();
+				_tokenizer.Read();
+				return new ConvertExpression(ParsePrefixExpression(), ConvertType.Integer);
+			}
+			else if (_tokenizer.GetNextToken(0).Type == TokenType.SymbolOpenParenthesis &&
+				_tokenizer.GetNextToken(1).Type == TokenType.KeywordReal &&
+				_tokenizer.GetNextToken(2).Type == TokenType.SymbolCloseParenthesis)
+			{
+				_tokenizer.Read();
+				_tokenizer.Read();
+				_tokenizer.Read();
+				return new ConvertExpression(ParsePrefixExpression(), ConvertType.Real);
+			}
+			else if (_tokenizer.GetNextToken(0).Type == TokenType.SymbolOpenParenthesis &&
+				_tokenizer.GetNextToken(1).Type == TokenType.KeywordString &&
+				_tokenizer.GetNextToken(2).Type == TokenType.SymbolCloseParenthesis)
+			{
+				_tokenizer.Read();
+				_tokenizer.Read();
+				_tokenizer.Read();
+				return new ConvertExpression(ParsePrefixExpression(), ConvertType.String);
+			}
 			else
 				return ParseClassInstanceExpression();
 		}
@@ -670,7 +735,7 @@ namespace IronTjs.Compiler
 		Expression ParseClassInstanceExpression()
 		{
 			var exp = ParseValidationExpression();
-			while (Accept(TokenType.KeywordInstanceOf) != null)
+			while (Accept(TokenType.KeywordInstanceOf))
 				exp = new BinaryExpression(exp, ParseValidationExpression(), BinaryOperator.InstanceOf);
 			return exp;
 		}
@@ -678,7 +743,7 @@ namespace IronTjs.Compiler
 		Expression ParseValidationExpression()
 		{
 			var exp = ParseContextExpression();
-			if (Accept(TokenType.KeywordIsValid) != null)
+			if (Accept(TokenType.KeywordIsValid))
 				return new UnaryExpression(exp, UnaryOperator.IsValid);
 			return exp;
 		}
@@ -686,7 +751,7 @@ namespace IronTjs.Compiler
 		Expression ParseContextExpression()
 		{
 			var exp = ParsePostfixExpression();
-			while (Accept(TokenType.KeywordInContextOf) != null)
+			while (Accept(TokenType.KeywordInContextOf))
 				exp = new BinaryExpression(exp, ParsePostfixExpression(), BinaryOperator.InContextOf);
 			return exp;
 		}
@@ -696,11 +761,11 @@ namespace IronTjs.Compiler
 			var exp = ParseMemberExpression();
 			while (true)
 			{
-				if (Accept(TokenType.SymbolDoublePlus) != null)
+				if (Accept(TokenType.SymbolDoublePlus))
 					exp = new UnaryExpression(exp, UnaryOperator.PostIncrementAssign);
-				else if (Accept(TokenType.SymbolDoubleMinus) != null)
+				else if (Accept(TokenType.SymbolDoubleMinus))
 					exp = new UnaryExpression(exp, UnaryOperator.PostDecrementAssign);
-				else if (Accept(TokenType.SymbolExclamation) != null)
+				else if (Accept(TokenType.SymbolExclamation))
 					exp = new UnaryExpression(exp, UnaryOperator.Evaluate);
 				else
 					break;
@@ -711,38 +776,36 @@ namespace IronTjs.Compiler
 		Expression ParseMemberExpression()
 		{
 			Expression exp;
-			if (Accept(TokenType.SymbolPeriod) != null)
+			if (Accept(TokenType.SymbolPeriod))
 				exp = new DirectMemberAccessExpression(null, Expect(TokenType.Identifier).Value.ToString());
 			else
 				exp = ParsePrimaryExpression();
 			while (true)
 			{
-				if (Accept(TokenType.SymbolPeriod) != null)
+				if (Accept(TokenType.SymbolPeriod))
 					exp = new DirectMemberAccessExpression(exp, Expect(TokenType.Identifier).Value.ToString());
-				else if (Accept(TokenType.SymbolOpenBracket) != null)
+				else if (Accept(TokenType.SymbolOpenBracket))
 				{
 					exp = new IndirectMemberAccessExpression(exp, ParseExpression());
 					Expect(TokenType.SymbolCloseBracket);
 				}
-				else if (Accept(TokenType.SymbolOpenParenthesis) != null)
+				else if (Accept(TokenType.SymbolOpenParenthesis))
 				{
-					List<Expression> arguments = new List<Expression>();
-					if (Accept(TokenType.SymbolCloseParenthesis) == null)
+					bool inheritArgs = false;
+					List<InvocationArgument> arguments = new List<InvocationArgument>();
+					if (!Accept(TokenType.SymbolCloseParenthesis))
 					{
-						if (_tokenizer.NextToken.Type != TokenType.SymbolComma)
-							arguments.Add(ParseAssignmentExpression());
+						if (Accept(TokenType.SymbolTriplePeriod))
+							inheritArgs = true;
 						else
-							arguments.Add(null);
-						while (Accept(TokenType.SymbolComma) != null)
 						{
-							if (_tokenizer.NextToken.Type != TokenType.SymbolComma && _tokenizer.NextToken.Type != TokenType.SymbolCloseParenthesis)
-								arguments.Add(ParseAssignmentExpression());
-							else
-								arguments.Add(null);
+							arguments.Add(ParseInvocationArgument());
+							while (Accept(TokenType.SymbolComma))
+								arguments.Add(ParseInvocationArgument());
 						}
 						Expect(TokenType.SymbolCloseParenthesis);
 					}
-					exp = new InvokeExpression(exp, arguments);
+					exp = new InvokeExpression(exp, arguments, inheritArgs);
 				}
 				else
 					break;
@@ -750,43 +813,63 @@ namespace IronTjs.Compiler
 			return exp;
 		}
 
+		InvocationArgument ParseInvocationArgument()
+		{
+			if (_tokenizer.GetNextToken(0).Type == TokenType.SymbolAsterisk &&
+				(_tokenizer.GetNextToken(1).Type == TokenType.SymbolCloseParenthesis ||
+				_tokenizer.GetNextToken(1).Type == TokenType.SymbolComma))
+			{
+				_tokenizer.Read();
+				return new InvocationArgument(null, true);
+			}
+			else if (_tokenizer.NextToken.Type != TokenType.SymbolComma && _tokenizer.NextToken.Type != TokenType.SymbolCloseParenthesis)
+			{
+				var exp = ParseAssignmentExpression();
+				if (Accept(TokenType.SymbolAsterisk))
+					return new InvocationArgument(exp, true);
+				else
+					return new InvocationArgument(exp, false);
+			}
+			else
+				return new InvocationArgument(null, false);
+		}
+
 		Expression ParsePrimaryExpression()
 		{
-			var identifier = Accept(TokenType.Identifier);
-			if (identifier != null)
-				return new IdentifierExpression(identifier.Value.ToString());
-			else if (Accept(TokenType.KeywordSuper) != null)
+			if (_tokenizer.NextToken.Type == TokenType.Identifier)
+				return new IdentifierExpression(_tokenizer.Read().Value.ToString());
+			else if (Accept(TokenType.KeywordSuper))
 				return new SuperExpression();
-			else if (Accept(TokenType.KeywordGlobal) != null)
+			else if (Accept(TokenType.KeywordGlobal))
 				return new GlobalExpression();
-			else if (Accept(TokenType.KeywordThis) != null)
+			else if (Accept(TokenType.KeywordThis))
 				return new ThisExpression();
-			else if (Accept(TokenType.SymbolOpenBracket) != null)
+			else if (Accept(TokenType.SymbolOpenBracket))
 			{
 				List<Expression> exps = new List<Expression>();
-				if (Accept(TokenType.SymbolCloseBracket) == null)
+				if (!Accept(TokenType.SymbolCloseBracket))
 				{
 					exps.Add(ParseAssignmentExpression());
-					while (Accept(TokenType.SymbolComma) != null)
+					while (Accept(TokenType.SymbolComma))
 						exps.Add(ParseAssignmentExpression());
 					Expect(TokenType.SymbolCloseBracket);
 				}
 				return new NewArrayExpression(exps);
 			}
-			else if (Accept(TokenType.SymbolPercent) != null)
+			else if (Accept(TokenType.SymbolPercent))
 			{
 				Expect(TokenType.SymbolOpenBracket);
 				List<DictionaryInitializationEntry> exps = new List<DictionaryInitializationEntry>();
-				if (Accept(TokenType.SymbolCloseBracket) == null)
+				if (!Accept(TokenType.SymbolCloseBracket))
 				{
 					exps.Add(ParseDictionaryInitializationEntry());
-					while (Accept(TokenType.SymbolComma) != null)
+					while (Accept(TokenType.SymbolComma))
 						exps.Add(ParseDictionaryInitializationEntry());
 					Expect(TokenType.SymbolCloseBracket);
 				}
 				return new NewDictionaryExpression(exps);
 			}
-			else if (Accept(TokenType.SymbolOpenParenthesis) != null)
+			else if (Accept(TokenType.SymbolOpenParenthesis))
 			{
 				var exp = ParseExpression();
 				Expect(TokenType.SymbolCloseParenthesis);
@@ -806,24 +889,24 @@ namespace IronTjs.Compiler
 
 		object ParseLiteral()
 		{
-			Token token;
-			if (Accept(TokenType.KeywordTrue) != null)
+			if (Accept(TokenType.KeywordTrue))
 				return 1L;
-			else if (Accept(TokenType.KeywordFalse) != null)
+			else if (Accept(TokenType.KeywordFalse))
 				return 0L;
-			else if (Accept(TokenType.KeywordNull) != null)
+			else if (Accept(TokenType.KeywordNull))
 				return null;
-			else if (Accept(TokenType.KeywordVoid) != null)
+			else if (Accept(TokenType.KeywordVoid))
 				return IronTjs.Builtins.Void.Value;
-			else if ((token = Accept(TokenType.LiteralInteger, TokenType.LiteralReal)) != null)
-				return token.Value;
+			else if (_tokenizer.NextToken.Type == TokenType.LiteralInteger)
+				return _tokenizer.Read().Value;
+			else if (_tokenizer.NextToken.Type == TokenType.LiteralReal)
+				return _tokenizer.Read().Value;
 			else
 			{
-				token = Expect(TokenType.LiteralString);
 				StringBuilder sb = new StringBuilder();
-				do
-					sb.Append(token.Value.ToString());
-				while ((token = Accept(TokenType.LiteralString)) != null);
+				sb.Append(Expect(TokenType.LiteralString).Value.ToString());
+				while (_tokenizer.NextToken.Type == TokenType.LiteralString)
+					sb.Append(_tokenizer.Read().Value.ToString());
 				return sb.ToString();
 			}
 		}

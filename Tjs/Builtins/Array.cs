@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace IronTjs.Builtins
 {
-	public class Array : IEnumerable<object>
+	public class Array : IList<object>
 	{
 		public Array() { _buffer = new CircularBuffer<object>(); }
 
@@ -236,8 +236,37 @@ namespace IronTjs.Builtins
 			return Void.Value;
 		}
 
+		int IList<object>.IndexOf(object item) { return find(item); }
+
+		void IList<object>.Insert(int index, object item) { insert(index, item); }
+
+		void IList<object>.RemoveAt(int index) { erase(index); }
+
+		void ICollection<object>.Add(object item) { add(item); }
+
+		void ICollection<object>.Clear() { clear(); }
+
+		bool ICollection<object>.Contains(object item) { return find(item) >= 0; }
+
+		void ICollection<object>.CopyTo(object[] array, int arrayIndex) { _buffer.CopyTo(array, arrayIndex); }
+
+		int ICollection<object>.Count { get { return count; } }
+
+		bool ICollection<object>.IsReadOnly { get { return false; } }
+
+		bool ICollection<object>.Remove(object item)
+		{
+			var index = find(item);
+			if (index >= 0)
+			{
+				erase(index);
+				return true;
+			}
+			return false;
+		}
+
 		IEnumerator<object> IEnumerable<object>.GetEnumerator() { return _buffer.GetEnumerator(); }
-		
+
 		IEnumerator IEnumerable.GetEnumerator() { return _buffer.GetEnumerator(); }
 	}
 }
