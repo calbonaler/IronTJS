@@ -31,7 +31,7 @@ sealed class TjsConsoleHost : ConsoleHost
 
 	void InitializeScope(ScriptScope scope)
 	{
-		scope.SetVariable("print", new Function((context, args) =>
+		scope.SetVariable("print", new Function((global, context, args) =>
 		{
 			if (args.Length <= 0)
 				ConsoleIO.WriteLine();
@@ -40,16 +40,17 @@ sealed class TjsConsoleHost : ConsoleHost
 			else if (args[0] != null)
 				ConsoleIO.WriteLine(string.Format(args[0].ToString(), Microsoft.Scripting.Utils.ArrayUtils.RemoveFirst(args)), Style.Out);
 			return IronTjs.Builtins.Void.Value;
-		}, null));
-		scope.SetVariable("scan", new Function((context, args) =>
+		}, null, null));
+		scope.SetVariable("scan", new Function((global, context, args) =>
 		{
 			if (args.Length > 0)
 				ConsoleIO.Write(string.Concat(args[0]), Style.Prompt);
 			return ConsoleIO.ReadLine(-1);
-		}, null));
+		}, null, null));
 		scope.SetVariable("Array", Microsoft.Scripting.Actions.MemberTracker.FromMemberInfo(typeof(IronTjs.Builtins.Array)));
 		scope.SetVariable("Dictionary", IronTjs.Builtins.Dictionary.GetClass());
 		scope.SetVariable("Exception", Microsoft.Scripting.Actions.MemberTracker.FromMemberInfo(typeof(Exception)));
+		scope.SetVariable("Math", Microsoft.Scripting.Actions.MemberTracker.FromMemberInfo(typeof(IronTjs.Builtins.Math)));
 	}
 
 	static int Main(string[] args)

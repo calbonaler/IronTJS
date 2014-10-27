@@ -412,8 +412,12 @@ namespace IronTjs.Compiler
 			}
 			else if (Accept(TokenType.KeywordReturn))
 			{
-				var exp = ParseExpression();
-				Expect(TokenType.SymbolSemicolon);
+				Expression exp = null;
+				if (!Accept(TokenType.SymbolSemicolon))
+				{
+					exp = ParseExpression();
+					Expect(TokenType.SymbolSemicolon);
+				}
 				return new ReturnStatement(exp);
 			}
 			else if (Accept(TokenType.KeywordThrow))

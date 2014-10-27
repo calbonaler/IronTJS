@@ -22,6 +22,10 @@ namespace IronTjs.Runtime
 			DefaultContext.InitializeDefaults(this);
 		}
 
+		public static string DisplayName { get { return "IronTJS"; } }
+
+		public static Version TjsVersion { get { return typeof(TjsContext).Assembly.GetName().Version; } }
+
 		// Comparison
 		CallSite<Func<CallSite, object, object, object>> _distinctEqualSite, _distinctNotEqualSite;
 		CallSite<Func<CallSite, object, object, object>> _equalSite, _notEqualSite;
@@ -44,7 +48,7 @@ namespace IronTjs.Runtime
 
 		public override Guid LanguageGuid { get { return new Guid("B6632EF3-555B-454A-816C-7430ADA873C8"); } }
 
-		public override Version LanguageVersion { get { return new Version("1.0.0.0"); } }
+		public override Version LanguageVersion { get { return TjsVersion; } }
 
 		public TjsBinder Binder { get; private set; }
 

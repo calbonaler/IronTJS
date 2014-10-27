@@ -45,6 +45,8 @@ namespace IronTjs.Compiler.Ast
 
 		public System.Linq.Expressions.Expression Context { get { return _context; } }
 
+		public System.Linq.Expressions.Expression GlobalContext { get { return _context; } }
+
 		public System.Linq.Expressions.Expression<TDelegate> Transform<TDelegate>() where TDelegate : class
 		{
 			var signature = Utils.GetDelegateSignature(typeof(TDelegate));

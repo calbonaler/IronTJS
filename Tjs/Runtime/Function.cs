@@ -12,19 +12,21 @@ namespace IronTjs.Runtime
 {
 	public class Function : IDynamicMetaObjectProvider, IContextChangeable
 	{
-		public Function(Func<object, object[], object> functionBody, object context)
+		public Function(Func<object, object, object[], object> functionBody, object global, object context)
 		{
 			_functionBody = functionBody;
+			_global = global;
 			Context = context;
 		}
 
-		Func<object, object[], object> _functionBody;
+		object _global;
+		Func<object, object, object[], object> _functionBody;
 
 		public object Context { get; private set; }
 
-		public object Invoke(params object[] args) { return _functionBody(Context, args); }
+		public object Invoke(params object[] args) { return _functionBody(_global, Context, args); }
 
-		public Function ChangeContext(object context) { return new Function(_functionBody, context); }
+		public Function ChangeContext(object context) { return new Function(_functionBody, _global, context); }
 
 		IContextChangeable IContextChangeable.ChangeContext(object context) { return ChangeContext(context); }
 

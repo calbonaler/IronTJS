@@ -47,6 +47,8 @@ namespace IronTjs.Compiler.Ast
 
 		public System.Linq.Expressions.Expression Context { get { return _context; } }
 
+		public System.Linq.Expressions.Expression GlobalContext { get { return GlobalParent.Context; } }
+
 		public System.Linq.Expressions.Expression TransformClass()
 		{
 			var defaultContext = MSAst.Constant(null);

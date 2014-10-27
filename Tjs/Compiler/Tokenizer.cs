@@ -114,53 +114,66 @@ namespace IronTjs.Compiler
 				}
 				while (_columnIndex < _line.Length && IsBaseNDigit(_line[_columnIndex], baseN)) // 整数部分
 					value = value * baseN + ConvertBaseNDigit(_line[_columnIndex++]);
-				long fraction = 0;
-				long divisor = 1;
+				Tuple<long, long> fractions = new Tuple<long, long>(0, 1);
 				if (_columnIndex < _line.Length && _line[_columnIndex] == '.') // 小数部分
 				{
 					_columnIndex++;
-					while (_columnIndex < _line.Length && IsBaseNDigit(_line[_columnIndex], baseN))
-					{
-						fraction = fraction * baseN + ConvertBaseNDigit(_line[_columnIndex++]);
-						divisor *= baseN;
-					}
+					fractions = ParseNumericLiteralFraction(baseN);
 				}
-				long exponent = 0;
-				long expBase = 0;
-				if (_columnIndex < _line.Length) // 指数部
-				{
-					if (_line[_columnIndex] == 'e' || _line[_columnIndex] == 'E') // 10を底とする指数表現
-					{
-						_columnIndex++;
-						expBase = 10;
-					}
-					else if (_line[_columnIndex] == 'p' || _line[_columnIndex] == 'P') // 2を底とする指数表現
-					{
-						_columnIndex++;
-						expBase = 2;
-					}
-					if (expBase != 0)
-					{
-						bool negative = false;
-						if (_columnIndex < _line.Length && _line[_columnIndex] == '+')
-							_columnIndex++;
-						else if (_columnIndex < _line.Length && _line[_columnIndex] == '-')
-						{
-							_columnIndex++;
-							negative = true;
-						}
-						while (_columnIndex < _line.Length && IsBaseNDigit(_line[_columnIndex], baseN))
-							exponent = exponent * baseN + ConvertBaseNDigit(_line[_columnIndex++]);
-						if (negative)
-							exponent = -exponent;
-					}
-				}
-				if (divisor > 1 || expBase != 0)
-					return new Token(TokenType.LiteralReal, ((double)value + (double)fraction / divisor) * Math.Pow(expBase, exponent), new SourceSpan(start, CurrentPosition));
+				var exponents = ParseNumericLiteralExponent(baseN);
+				if (fractions.Item2 > 1 || exponents.Item1 != 0)
+					return new Token(TokenType.LiteralReal, ((double)value + (double)fractions.Item1 / fractions.Item2) * Math.Pow(exponents.Item1, exponents.Item2), new SourceSpan(start, CurrentPosition));
 				else
 					return new Token(TokenType.LiteralInteger, value, new SourceSpan(start, CurrentPosition));
 			}
 			return null;
+		}
+
+		Tuple<long, long> ParseNumericLiteralFraction(int baseN)
+		{
+			long fraction = 0;
+			long divisor = 1;
+			while (_columnIndex < _line.Length && IsBaseNDigit(_line[_columnIndex], baseN))
+			{
+				fraction = fraction * baseN + ConvertBaseNDigit(_line[_columnIndex++]);
+				divisor *= baseN;
+			}
+			return new Tuple<long, long>(fraction, divisor);
+		}
+
+		Tuple<long, long> ParseNumericLiteralExponent(int baseN)
+		{
+			long expBase = 0;
+			long exponent = 0;
+			if (_columnIndex < _line.Length) // 指数部
+			{
+				if (_line[_columnIndex] == 'e' || _line[_columnIndex] == 'E') // 10を底とする指数表現
+				{
+					_columnIndex++;
+					expBase = 10;
+				}
+				else if (_line[_columnIndex] == 'p' || _line[_columnIndex] == 'P') // 2を底とする指数表現
+				{
+					_columnIndex++;
+					expBase = 2;
+				}
+				if (expBase != 0)
+				{
+					bool negative = false;
+					if (_columnIndex < _line.Length && _line[_columnIndex] == '+')
+						_columnIndex++;
+					else if (_columnIndex < _line.Length && _line[_columnIndex] == '-')
+					{
+						_columnIndex++;
+						negative = true;
+					}
+					while (_columnIndex < _line.Length && IsBaseNDigit(_line[_columnIndex], baseN))
+						exponent = exponent * baseN + ConvertBaseNDigit(_line[_columnIndex++]);
+					if (negative)
+						exponent = -exponent;
+				}
+			}
+			return new Tuple<long, long>(expBase, exponent);
 		}
 
 		// 文字列リテラル (連続文字列の連結はパーサーで)
@@ -239,10 +252,17 @@ namespace IronTjs.Compiler
 			while (_columnIndex < _line.Length && !char.IsWhiteSpace(_line[_columnIndex]))
 			{
 				sb.Append(_line[_columnIndex++]);
-				if (Token.GetTokenTypeForSymbol(sb.ToString()) != TokenType.Unknown)
+				var type = Token.GetTokenTypeForSymbol(sb.ToString());
+				if (type != TokenType.Unknown)
 				{
 					completeSymbol = sb.ToString();
 					index = _columnIndex;
+					Tuple<long, long> frac;
+					if (type == TokenType.SymbolPeriod && (frac = ParseNumericLiteralFraction(10)).Item2 > 1)
+					{
+						var exponents = ParseNumericLiteralExponent(10);
+						return new Token(TokenType.LiteralReal, (double)frac.Item1 / frac.Item2 * Math.Pow(exponents.Item1, exponents.Item2), new SourceSpan(start, CurrentPosition));
+					}
 				}
 			}
 			if (completeSymbol != null)

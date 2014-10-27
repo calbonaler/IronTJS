@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using IronTjs.Compiler;
+using IronTjs.Runtime;
 using Microsoft.Scripting;
 using Microsoft.Scripting.Hosting;
 using Microsoft.Scripting.Hosting.Shell;
@@ -15,6 +16,14 @@ namespace IronTjs.Hosting
 		public TjsCommandLine(Action<ScriptScope> scopeInitializer) { _scopeInitializer = scopeInitializer; }
 
 		Action<ScriptScope> _scopeInitializer;
+
+		protected override string Logo
+		{
+			get
+			{
+				return string.Format("{0} {1} on .NET {2}\nTJS2 Interpreter for .NET Framework\n\n", TjsContext.DisplayName, TjsContext.TjsVersion.ToString(), Environment.Version);
+			}
+		}
 
 		protected override int Run()
 		{

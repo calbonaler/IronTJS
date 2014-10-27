@@ -49,7 +49,7 @@ namespace IronTjs.Hosting
 		int _current;
 		int _rendered;
 		Cursor _cursor;
-		int[] _inputToOutputTable = new[] { 0 };
+		Tuple<int, int>[] _inputToOutputTable = new[] { new Tuple<int, int>(0, 0) };
 		int _tabWidth;
 		bool _coloringInput;
 
@@ -87,12 +87,12 @@ namespace IronTjs.Hosting
 
 		void Render()
 		{
-			_inputToOutputTable = new int[_input.Length + 1];
+			_inputToOutputTable = new Tuple<int,int>[_input.Length + 1];
 			_cursor.Reset();
 			StringBuilder output = new StringBuilder();
 			for (int i = 0; i < _input.Length; i++)
 			{
-				_inputToOutputTable[i] = output.Length;
+				_inputToOutputTable[i] = new Tuple<int,int>(output.Length, Encoding.GetEncoding(932).GetByteCount(output.ToString()));
 				if (_input[i] == '\t')
 				{
 					for (int j = _tabWidth - output.Length % _tabWidth; j > 0; j--)
@@ -108,7 +108,7 @@ namespace IronTjs.Hosting
 				else
 					output.Append(_input[i]);
 			}
-			_inputToOutputTable[_input.Length] = output.Length;
+			_inputToOutputTable[_input.Length] = new Tuple<int,int>(output.Length, Encoding.GetEncoding(932).GetByteCount(output.ToString()));
 			var text = output.ToString();
 			if (_coloringInput)
 			{
@@ -121,10 +121,10 @@ namespace IronTjs.Hosting
 					tokens.Add(tokenizer.Read());
 				foreach (var token in tokens)
 				{
-					var start = _inputToOutputTable[token.Span.Start.Index];
+					var start = _inputToOutputTable[token.Span.Start.Index].Item1;
 					if (end != start)
 						WriteColor(Output, text.Substring(end, start - end), ConsoleColor.Cyan);
-					end = _inputToOutputTable[token.Span.End.Index];
+					end = _inputToOutputTable[token.Span.End.Index].Item1;
 					ConsoleColor color;
 					switch (token.Type)
 					{
@@ -209,19 +209,19 @@ namespace IronTjs.Hosting
 			if (text.Length < _rendered)
 				Output.Write(new string(' ', _rendered - text.Length));
 			_rendered = text.Length;
-			_cursor.Place(_inputToOutputTable[_current]);
+			_cursor.Place(_inputToOutputTable[_current].Item2);
 		}
 
 		void MoveRight()
 		{
 			if (_current < _input.Length)
-				_cursor.Place(_inputToOutputTable[++_current]);
+				_cursor.Place(_inputToOutputTable[++_current].Item2);
 		}
 
 		void MoveLeft()
 		{
 			if (_current > 0)
-				_cursor.Place(_inputToOutputTable[--_current]);
+				_cursor.Place(_inputToOutputTable[--_current].Item2);
 		}
 
 		public override string ReadLine(int autoIndentSize)

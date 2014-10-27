@@ -27,8 +27,11 @@ namespace IronTjs.Compiler.Ast
 		
 		Dictionary<string, System.Linq.Expressions.ParameterExpression> _variables = new Dictionary<string, System.Linq.Expressions.ParameterExpression>();
 		// actual formal parameters 
+		System.Linq.Expressions.ParameterExpression _global = System.Linq.Expressions.Expression.Parameter(typeof(object), "global");
 		System.Linq.Expressions.ParameterExpression _context = System.Linq.Expressions.Expression.Parameter(typeof(object), "self");
 		System.Linq.Expressions.ParameterExpression _arguments = System.Linq.Expressions.Expression.Parameter(typeof(object[]), "args");
+
+		public System.Linq.Expressions.Expression GlobalContext { get { return _global; } }
 
 		public System.Linq.Expressions.Expression Context { get { return _context; } }
 
@@ -51,7 +54,7 @@ namespace IronTjs.Compiler.Ast
 				return System.Linq.Expressions.Expression.Dynamic(new ThisProxyMemberAccessBinder(
 					LanguageContext, name, false,
 					direct ? MemberAccessKind.Get | MemberAccessKind.Direct : MemberAccessKind.Get
-				), typeof(object), _context, GlobalParent.Context);
+				), typeof(object), _context, _global);
 		}
 
 		public System.Linq.Expressions.Expression ResolveForWrite(string name, System.Linq.Expressions.Expression value, bool direct)
@@ -63,7 +66,7 @@ namespace IronTjs.Compiler.Ast
 				return System.Linq.Expressions.Expression.Dynamic(new ThisProxyMemberAccessBinder(
 					LanguageContext, name, false,
 					direct ? MemberAccessKind.Set | MemberAccessKind.Direct : MemberAccessKind.Set
-				), typeof(object), _context, GlobalParent.Context, value);
+				), typeof(object), _context, _global, value);
 		}
 
 		public System.Linq.Expressions.Expression ResolveForDelete(string name)
@@ -74,7 +77,7 @@ namespace IronTjs.Compiler.Ast
 			else
 				return System.Linq.Expressions.Expression.Dynamic(new ThisProxyMemberAccessBinder(
 					LanguageContext, name, false, MemberAccessKind.Delete
-				), typeof(object), _context, GlobalParent.Context);
+				), typeof(object), _context, _global);
 		}
 
 		public System.Linq.Expressions.Expression DeclareVariable(string name, System.Linq.Expressions.Expression value)
@@ -107,7 +110,7 @@ namespace IronTjs.Compiler.Ast
 		//     <p[i]> = <i> < args.Length ? args[<i>] : void;
 		// <end if>
 
-		public System.Linq.Expressions.Expression<Func<object, object[], object>> TransformLambda()
+		public System.Linq.Expressions.Expression<Func<object, object, object[], object>> TransformLambda()
 		{
 			List<Ast> body = new List<Ast>();
 			for (int i = 0; i < Parameters.Count; i++)
@@ -144,14 +147,15 @@ namespace IronTjs.Compiler.Ast
 			foreach (var statement in Body)
 				body.Add(statement.Transform());
 			body.Add(Ast.Label(ReturnLabel, Ast.Constant(IronTjs.Builtins.Void.Value)));
-			return Ast.Lambda<Func<object, object[], object>>(Ast.Block(_variables.Values.Concat(Parameters.Select(x => x.ParameterVariable)), body), Name, new[] { _context, _arguments });
+			return Ast.Lambda<Func<object, object, object[], object>>(Ast.Block(_variables.Values.Concat(Parameters.Select(x => x.ParameterVariable)), body), Name, new[] { _global, _context, _arguments });
 		}
 
 		public System.Linq.Expressions.Expression TransformFunction(System.Linq.Expressions.Expression context)
 		{
 			var lambda = TransformLambda();
-			return Ast.New((System.Reflection.ConstructorInfo)Utils.GetMember(() => new Runtime.Function(null, null)),
+			return Ast.New((System.Reflection.ConstructorInfo)Utils.GetMember(() => new Runtime.Function(null, null, null)),
 				lambda,
+				GlobalParent.Context,
 				context
 			);
 		}

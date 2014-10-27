@@ -23,8 +23,7 @@ namespace IronTjs.Builtins
 
 		protected override bool TryGetValue(object key, bool direct, out object member)
 		{
-			var name = key as string;
-			if (name != null && _members.TryGetValue(name, out member))
+			if (key != null && _members.TryGetValue(key.ToString(), out member))
 			{
 				if (!direct)
 				{
@@ -34,21 +33,20 @@ namespace IronTjs.Builtins
 				}
 				return true;
 			}
-			member = null;
-			return false;
+			member = Void.Value;
+			return true;
 		}
 
 		protected override bool TrySetValue(object key, bool direct, bool forceCreate, object value)
 		{
-			string name = key as string;
-			if (name != null)
+			if (key != null)
 			{
 				object member;
 				if (TryGetValue(key, true, out member))
 				{
 					Runtime.Property prop;
 					if (direct || (prop = member as Runtime.Property) == null)
-						_members[name] = value;
+						_members[key.ToString()] = value;
 					else
 						prop.Value = value;
 					return true;
@@ -56,7 +54,7 @@ namespace IronTjs.Builtins
 				else if (forceCreate)
 				{
 					Version++;
-					_members[name] = value;
+					_members[key.ToString()] = value;
 					return true;
 				}
 			}
@@ -65,10 +63,9 @@ namespace IronTjs.Builtins
 
 		protected override bool TryDeleteValue(object key)
 		{
-			var name = key as string;
-			if (name != null)
+			if (key != null)
 			{
-				var result = _members.Remove(name);
+				var result = _members.Remove(key.ToString());
 				if (result)
 					Version++;
 				return result;
@@ -226,25 +223,25 @@ namespace IronTjs.Builtins
 
 			static IEnumerable<KeyValuePair<string, object>> PopulateMembers()
 			{
-				yield return new KeyValuePair<string, object>("saveStruct", new Runtime.Function(saveStruct, null));
-				yield return new KeyValuePair<string, object>("assign", new Runtime.Function(assign, null));
-				yield return new KeyValuePair<string, object>("assignStruct", new Runtime.Function(assignStruct, null));
-				yield return new KeyValuePair<string, object>("clear", new Runtime.Function(clear, null));
+				yield return new KeyValuePair<string, object>("saveStruct", new Runtime.Function(saveStruct, null, null));
+				yield return new KeyValuePair<string, object>("assign", new Runtime.Function(assign, null, null));
+				yield return new KeyValuePair<string, object>("assignStruct", new Runtime.Function(assignStruct, null, null));
+				yield return new KeyValuePair<string, object>("clear", new Runtime.Function(clear, null, null));
 			}
 
-			static object saveStruct(object self, object[] args)
+			static object saveStruct(object global, object self, object[] args)
 			{
 				string fileName = (string)Runtime.Binding.TjsBinder.ConvertInternal(args[0], typeof(string));
 				System.IO.File.WriteAllText(fileName, Utils.ConvertToExpression((IEnumerable)self, 0));
 				return self;
 			}
 
-			static object assign(object self, object[] args)
+			static object assign(object global, object self, object[] args)
 			{
 				var source = args.Length > 0 ? args[0] as IEnumerable : null;
 				var clearContents = args.Length > 1 ? (args[1] == Void.Value ? true : (bool)Runtime.Binding.TjsBinder.ConvertInternal(args[1], typeof(bool))) : true;
 				if (clearContents)
-					clear(self, new object[0]);
+					clear(global, self, new object[0]);
 				var dictSource = source as IDictionary;
 				if (dictSource != null)
 				{
@@ -312,14 +309,14 @@ namespace IronTjs.Builtins
 				}
 			}
 
-			static object assignStruct(object self, object[] args)
+			static object assignStruct(object global, object self, object[] args)
 			{
 				var source = args.Length > 0 ? args[0] as IEnumerable : null;
 				assignStructInternal((IDictionary)self, source);
 				return Void.Value;
 			}
 
-			static object clear(object self, object[] args)
+			static object clear(object global, object self, object[] args)
 			{
 				((IDictionary)self).Clear();
 				return Void.Value;

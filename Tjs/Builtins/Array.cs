@@ -22,8 +22,10 @@ namespace IronTjs.Builtins
 		{
 			get
 			{
+				if (index < -_buffer.Count || index >= _buffer.Count)
+					return Void.Value;
 				if (index < 0)
-					return _buffer[_buffer.Count - index];
+					return _buffer[_buffer.Count + index];
 				else
 					return _buffer[index];
 			}
