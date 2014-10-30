@@ -1,0 +1,431 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SyntaxHighlightingTextBox</name>
+    </assembly>
+    <members>
+        <member name="T:Controls.IHighlightDescriptor">
+            <summary>強調表示する文字列内の範囲を検索する方法を提供します。</summary>
+        </member>
+        <member name="M:Controls.IHighlightDescriptor.GetToken(System.String,System.Int32,System.Int32)">
+            <summary>指定された文字列の中から強調表示する範囲を検索します。</summary>
+            <param name="text">強調表示する範囲を検索する文字列を指定します。</param>
+            <param name="startIndex">文字列内の範囲の検索を開始する位置を指定します。</param>
+            <param name="rangeStartLimit">結果として得られる範囲の開始位置の排他的上限を指定します。</param>
+            <returns>強調表示される文字列内の範囲を表す <see cref="T:Controls.HighlightToken"/>。</returns>
+        </member>
+        <member name="T:Controls.HighlightToken">
+            <summary>強調表示する文字列内の範囲を表します。</summary>
+        </member>
+        <member name="M:Controls.HighlightToken.#ctor(System.Int32,System.Int32,System.Windows.Media.Color,System.Windows.Media.Color)">
+            <summary>指定された開始位置、長さ、前景色、背景色を使用して、<see cref="T:Controls.HighlightToken"/> クラスの新しいインスタンスを初期化します。</summary>
+            <param name="first">範囲の開始位置を指定します。</param>
+            <param name="length">範囲の長さを指定します。</param>
+            <param name="foreColor">範囲を強調表示するときに使用する前景色を指定します。</param>
+            <param name="backColor">範囲を強調表示するときに使用する背景色を指定します。</param>
+        </member>
+        <member name="M:Controls.HighlightToken.#ctor(System.Int32,System.Int32,System.Drawing.Color,System.Drawing.Color)">
+            <summary>指定された開始位置、長さ、前景色、背景色を使用して、<see cref="T:Controls.HighlightToken"/> クラスの新しいインスタンスを初期化します。</summary>
+            <param name="first">範囲の開始位置を指定します。</param>
+            <param name="length">範囲の長さを指定します。</param>
+            <param name="foreColor">範囲を強調表示するときに使用する前景色を指定します。</param>
+            <param name="backColor">範囲を強調表示するときに使用する背景色を指定します。</param>
+        </member>
+        <member name="F:Controls.HighlightToken.Empty">
+            <summary>文字列内のどの場所も表さない <see cref="T:Controls.HighlightToken"/> を取得します。</summary>
+        </member>
+        <member name="P:Controls.HighlightToken.First">
+            <summary>範囲の開始位置を取得します。</summary>
+        </member>
+        <member name="P:Controls.HighlightToken.Length">
+            <summary>範囲の長さを取得します。</summary>
+        </member>
+        <member name="P:Controls.HighlightToken.ForeColor">
+            <summary>範囲の表示に使用される前景色を取得します。</summary>
+        </member>
+        <member name="P:Controls.HighlightToken.BackColor">
+            <summary>範囲の表示に使用される背景色を取得します。</summary>
+        </member>
+        <member name="T:Controls.RangeHighlightDescriptor">
+            <summary>2つの文字列によって囲まれた範囲を強調表示します。</summary>
+        </member>
+        <member name="M:Controls.RangeHighlightDescriptor.#ctor">
+            <summary><see cref="T:Controls.RangeHighlightDescriptor"/> の新しいインスタンスを初期化します。</summary>
+        </member>
+        <member name="M:Controls.RangeHighlightDescriptor.#ctor(System.Drawing.Color,System.Drawing.Color,System.String,System.String)">
+            <summary>指定された前景色、背景色、開始文字列、終了文字列を使用して、<see cref="T:Controls.RangeHighlightDescriptor"/> クラスの新しいインスタンスを初期化します。</summary>
+            <param name="foreColor">強調表示に使用する前景色を指定します。</param>
+            <param name="backColor">強調表示に使用する背景色を指定します。</param>
+            <param name="openString">範囲の開始を表す文字列を指定します。</param>
+            <param name="closeString">範囲の終了を表す文字列を指定します。</param>
+        </member>
+        <member name="M:Controls.RangeHighlightDescriptor.GetToken(System.String,System.Int32,System.Int32)">
+            <summary>指定された文字列の中から強調表示する範囲を検索します。</summary>
+            <param name="text">強調表示する範囲を検索する文字列を指定します。</param>
+            <param name="startIndex">文字列内の範囲の検索を開始する位置を指定します。</param>
+            <param name="rangeStartLimit">結果として得られる範囲の開始位置の排他的上限を指定します。</param>
+            <returns>強調表示される文字列内の範囲を表す <see cref="T:Controls.HighlightToken"/>。</returns>
+        </member>
+        <member name="P:Controls.RangeHighlightDescriptor.ForeColor">
+            <summary>強調表示に使用する前景色を取得または設定します。</summary>
+        </member>
+        <member name="P:Controls.RangeHighlightDescriptor.BackColor">
+            <summary>強調表示に使用する背景色を取得または設定します。</summary>
+        </member>
+        <member name="P:Controls.RangeHighlightDescriptor.OpenString">
+            <summary>強調表示する範囲の開始を表す文字列を取得または設定します。</summary>
+        </member>
+        <member name="P:Controls.RangeHighlightDescriptor.CloseString">
+            <summary>強調表示する範囲の終了を表す文字列を取得または設定します。</summary>
+        </member>
+        <member name="T:Controls.RegexHighlightDescriptor">
+            <summary>正規表現によって指定された範囲を強調表示します。</summary>
+        </member>
+        <member name="M:Controls.RegexHighlightDescriptor.#ctor">
+            <summary><see cref="T:Controls.RegexHighlightDescriptor"/> クラスの新しいインスタンスを初期化します。</summary>
+        </member>
+        <member name="M:Controls.RegexHighlightDescriptor.#ctor(System.Drawing.Color,System.Drawing.Color,System.String)">
+            <summary>指定された前景色、背景色、正規表現パターンを使用して、<see cref="T:Controls.RegexHighlightDescriptor"/> クラスの新しいインスタンスを初期化します。</summary>
+            <param name="foreColor">強調表示に使用する前景色を指定します。</param>
+            <param name="backColor">強調表示に使用する背景色を指定します。</param>
+            <param name="pattern">強調表示する範囲を示す正規表現パターンを指定します。</param>
+        </member>
+        <member name="M:Controls.RegexHighlightDescriptor.GetToken(System.String,System.Int32,System.Int32)">
+            <summary>指定された文字列の中から強調表示する範囲を検索します。</summary>
+            <param name="text">強調表示する範囲を検索する文字列を指定します。</param>
+            <param name="startIndex">文字列内の範囲の検索を開始する位置を指定します。</param>
+            <param name="rangeStartLimit">結果として得られる範囲の開始位置の排他的上限を指定します。</param>
+            <returns>強調表示される文字列内の範囲を表す <see cref="T:Controls.HighlightToken"/>。</returns>
+        </member>
+        <member name="P:Controls.RegexHighlightDescriptor.ForeColor">
+            <summary>強調表示に使用する前景色を取得または設定します。</summary>
+        </member>
+        <member name="P:Controls.RegexHighlightDescriptor.BackColor">
+            <summary>強調表示に使用する背景色を取得または設定します。</summary>
+        </member>
+        <member name="P:Controls.RegexHighlightDescriptor.Pattern">
+            <summary>強調表示する範囲を示す正規表現パターンを取得または設定します。</summary>
+        </member>
+        <member name="T:Controls.WordHighlightDescriptor">
+            <summary>指定された単語を強調表示します。</summary>
+        </member>
+        <member name="M:Controls.WordHighlightDescriptor.#ctor">
+            <summary><see cref="T:Controls.WordHighlightDescriptor"/> クラスの新しいインスタンスを初期化します。</summary>
+        </member>
+        <member name="M:Controls.WordHighlightDescriptor.#ctor(System.Drawing.Color,System.Drawing.Color,System.Boolean,System.String[])">
+            <summary>指定された前景色、背景色、単語を使用して、<see cref="T:Controls.WordHighlightDescriptor"/> クラスの新しいインスタンスを初期化します。</summary>
+            <param name="foreColor">強調表示に使用する前景色を指定します。</param>
+            <param name="backColor">強調表示に使用する背景色を指定します。</param>
+            <param name="caseSensitive">単語の一致で大文字と小文字を区別するかどうかを示す値を指定します。</param>
+            <param name="words">強調表示する単語を指定します。複数指定できます。</param>
+        </member>
+        <member name="M:Controls.WordHighlightDescriptor.GetToken(System.String,System.Int32,System.Int32)">
+            <summary>指定された文字列の中から強調表示する範囲を検索します。</summary>
+            <param name="text">強調表示する範囲を検索する文字列を指定します。</param>
+            <param name="startIndex">文字列内の範囲の検索を開始する位置を指定します。</param>
+            <param name="rangeStartLimit">結果として得られる範囲の開始位置の排他的上限を指定します。</param>
+            <returns>強調表示される文字列内の範囲を表す <see cref="T:Controls.HighlightToken"/>。</returns>
+        </member>
+        <member name="P:Controls.WordHighlightDescriptor.ForeColor">
+            <summary>強調表示に使用する前景色を取得または設定します。</summary>
+        </member>
+        <member name="P:Controls.WordHighlightDescriptor.BackColor">
+            <summary>強調表示に使用する背景色を取得または設定します。</summary>
+        </member>
+        <member name="P:Controls.WordHighlightDescriptor.Words">
+            <summary>強調表示する単語のリストを取得または設定します。</summary>
+        </member>
+        <member name="P:Controls.WordHighlightDescriptor.IsCaseSensitive">
+            <summary>単語の一致で大文字と小文字を区別するかどうかを示す値を取得または設定します。</summary>
+        </member>
+        <member name="T:Controls.EscapedRangeHighlightDescriptor">
+            <summary>指定された文字によって囲まれたエスケープ可能な範囲を強調表示します。</summary>
+        </member>
+        <member name="M:Controls.EscapedRangeHighlightDescriptor.#ctor">
+            <summary><see cref="T:Controls.EscapedRangeHighlightDescriptor"/> クラスの新しいインスタンスを初期化します。</summary>
+        </member>
+        <member name="M:Controls.EscapedRangeHighlightDescriptor.#ctor(System.Drawing.Color,System.Drawing.Color,System.Char,System.Char,System.Boolean)">
+            <summary>指定された前景色、背景色、境界文字、エスケープ文字を使用して、<see cref="T:Controls.EscapedRangeHighlightDescriptor"/> クラスの新しいインスタンスを初期化します。</summary>
+            <param name="foreColor">強調表示に使用する前景色を指定します。</param>
+            <param name="backColor">強調表示に使用する背景色を指定します。</param>
+            <param name="boundary">範囲の開始と終了を表す文字を指定します。</param>
+            <param name="escape">エスケープのために使用する文字を指定します。</param>
+            <param name="multiline">範囲が複数行に及ぶかどうかを示す値を指定します。</param>
+        </member>
+        <member name="M:Controls.EscapedRangeHighlightDescriptor.GetToken(System.String,System.Int32,System.Int32)">
+            <summary>指定された文字列の中から強調表示する範囲を検索します。</summary>
+            <param name="text">強調表示する範囲を検索する文字列を指定します。</param>
+            <param name="startIndex">文字列内の範囲の検索を開始する位置を指定します。</param>
+            <param name="rangeStartLimit">結果として得られる範囲の開始位置の排他的上限を指定します。</param>
+            <returns>強調表示される文字列内の範囲を表す <see cref="T:Controls.HighlightToken"/>。</returns>
+        </member>
+        <member name="P:Controls.EscapedRangeHighlightDescriptor.ForeColor">
+            <summary>強調表示に使用する前景色を取得または設定します。</summary>
+        </member>
+        <member name="P:Controls.EscapedRangeHighlightDescriptor.BackColor">
+            <summary>強調表示に使用する背景色を取得または設定します。</summary>
+        </member>
+        <member name="P:Controls.EscapedRangeHighlightDescriptor.BoundaryCharacter">
+            <summary>強調表示する範囲の開始と終了を表す文字を取得または設定します。</summary>
+        </member>
+        <member name="P:Controls.EscapedRangeHighlightDescriptor.EscapeCharacter">
+            <summary>エスケープのために使用する文字を取得または設定します。</summary>
+        </member>
+        <member name="P:Controls.EscapedRangeHighlightDescriptor.IsMultiline">
+            <summary>範囲が複数行に及ぶかどうかを示す値を取得または設定します。</summary>
+        </member>
+        <member name="T:Controls.IHighlightTokenizer">
+            <summary>文字列内の強調表示するすべての範囲を検索する方法を提供します。</summary>
+        </member>
+        <member name="M:Controls.IHighlightTokenizer.GetTokens(System.String)">
+            <summary>指定された文字列の中で強調表示するすべての範囲を取得します。</summary>
+            <param name="text">強調表示する範囲を含む文字列を指定します。</param>
+            <returns>強調表示される文字列内の複数の範囲を表す <see cref="T:Controls.HighlightToken"/> のシーケンス。</returns>
+        </member>
+        <member name="T:Controls.CompositeHighlightTokenizer">
+            <summary>複数の <see cref="T:Controls.IHighlightDescriptor"/> から得られる強調表示範囲を1つにまとめる方法を提供します。</summary>
+        </member>
+        <member name="M:Controls.CompositeHighlightTokenizer.#ctor">
+            <summary><see cref="T:Controls.CompositeHighlightTokenizer"/> クラスの新しいインスタンスを初期化します。</summary>
+        </member>
+        <member name="M:Controls.CompositeHighlightTokenizer.GetTokens(System.String)">
+            <summary>指定された文字列の中で強調表示するすべての範囲を取得します。</summary>
+            <param name="text">強調表示する範囲を含む文字列を指定します。</param>
+            <returns>強調表示される文字列内の複数の範囲を表す <see cref="T:Controls.HighlightToken"/> のシーケンス。</returns>
+        </member>
+        <member name="P:Controls.CompositeHighlightTokenizer.HighlightDescriptors">
+            <summary>強調表示するコンテンツを示す <see cref="T:Controls.IHighlightDescriptor"/> のコレクションを取得します。</summary>
+        </member>
+        <member name="T:Controls.HighlightDescriptorCollection">
+            <summary><see cref="T:Controls.IHighlightDescriptor"/> クラスのコレクションを表します。</summary>
+        </member>
+        <member name="T:Controls.RtfBuilder">
+            <summary>RTF (Rich Text Format) 形式の文書を作成します。</summary>
+        </member>
+        <member name="M:Controls.RtfBuilder.AppendWithColor(System.String,System.Int32,System.Int32,System.Windows.Media.Color,System.Windows.Media.Color)">
+            <summary>指定された文字列の指定された部分を指定された前景色と指定された背景色で書き込みます。</summary>
+            <param name="text">書き込む対象の文字列を指定します。</param>
+            <param name="startIndex">書き込みを開始する文字列内の位置を指定します。</param>
+            <param name="count">書き込む文字数を指定します。</param>
+            <param name="foreColor">文字列の前景色を指定します。</param>
+            <param name="backColor">文字列の背景色を指定します。</param>
+        </member>
+        <member name="M:Controls.RtfBuilder.Append(System.Char)">
+            <summary>指定された文字を書き込みます。</summary>
+            <param name="ch">書き込む文字を指定します。</param>
+        </member>
+        <member name="M:Controls.RtfBuilder.BuildStream">
+            <summary>生成された文書を表す <see cref="T:System.IO.Stream"/> を取得します。</summary>
+            <returns>文書を表す <see cref="T:System.IO.Stream"/>。</returns>
+        </member>
+        <member name="M:Controls.RtfBuilder.Clear">
+            <summary>書き込みを行った部分をすべてクリアします。フォントやタブの停止位置は変更されません。</summary>
+        </member>
+        <member name="P:Controls.RtfBuilder.TabStops">
+            <summary>タブの停止位置を表すコレクションを取得します。停止位置はTwipで表されます。</summary>
+        </member>
+        <member name="P:Controls.RtfBuilder.Font">
+            <summary>この文書のフォントを取得または設定します。</summary>
+        </member>
+        <member name="T:Controls.WindowsForms.SyntaxHighlightingTextBox">
+            <summary>構文の強調表示が可能なテキストボックスを表します。</summary>
+        </member>
+        <member name="M:Controls.WindowsForms.SyntaxHighlightingTextBox.SetTabStops(System.Int32[])">
+            <summary>タブの停止位置を設定します。停止位置は平均文字幅の1/4単位で表されます。</summary>
+            <param name="stops">設定する停止位置を指定します。</param>
+        </member>
+        <member name="M:Controls.WindowsForms.SyntaxHighlightingTextBox.OnTextChanged(System.EventArgs)">
+            <summary><see cref="E:System.Windows.Forms.Control.TextChanged"/> イベントを発生させます。</summary>
+            <param name="e">イベント データを格納している <see cref="T:System.EventArgs"/>。</param>
+        </member>
+        <member name="P:Controls.WindowsForms.SyntaxHighlightingTextBox.HighlightTokenizer">
+            <summary>このテキストボックス内の文字列を強調表示する方法を表す <see cref="T:Controls.IHighlightTokenizer"/> を取得または設定します。</summary>
+        </member>
+        <member name="P:Controls.WindowsForms.SyntaxHighlightingTextBox.Font">
+            <summary>コントロール内にテキストを表示するときに使用するフォントを取得または設定します。</summary>
+        </member>
+        <member name="T:Controls.WindowsForms.TextMetrics">
+            <summary>フォントに関する情報を表します。</summary>
+        </member>
+        <member name="M:Controls.WindowsForms.TextMetrics.FromFont(System.Drawing.IDeviceContext,System.Drawing.Font)">
+            <summary>指定されたフォントの情報を表す <see cref="T:Controls.WindowsForms.TextMetrics"/> クラスのインスタンスを取得します。</summary>
+            <param name="dc">フォントの情報を取得するために使用するデバイスコンテキストを指定します。</param>
+            <param name="font">情報を取得するフォントを指定します。</param>
+            <returns>フォントの情報を格納する <see cref="T:Controls.WindowsForms.TextMetrics"/> クラスのインスタンス。</returns>
+        </member>
+        <member name="P:Controls.WindowsForms.TextMetrics.Height">
+            <summary>フォントの文字の高さ (アセント + ディセント) を取得します。</summary>
+        </member>
+        <member name="P:Controls.WindowsForms.TextMetrics.Ascent">
+            <summary>フォントの文字のアセント (ベースラインから文字の上部までの高さ) を取得します。</summary>
+        </member>
+        <member name="P:Controls.WindowsForms.TextMetrics.Descent">
+            <summary>フォントの文字のディセント (文字の下部からベースラインまでの高さ) を取得します。</summary>
+        </member>
+        <member name="P:Controls.WindowsForms.TextMetrics.InternalLeading">
+            <summary>フォントの内部レディングを取得します。内部レディングにはアクセント記号などが描画されることがあります。</summary>
+        </member>
+        <member name="P:Controls.WindowsForms.TextMetrics.ExternalLeading">
+            <summary>フォントの外部レディング (行間) を取得します。</summary>
+        </member>
+        <member name="P:Controls.WindowsForms.TextMetrics.AverageCharacterWidth">
+            <summary>フォントの平均文字幅 (一般的に英字の x の幅によって定義される値) を取得します。太字や斜体などのためのオーバーハングは含まれません。</summary>
+        </member>
+        <member name="P:Controls.WindowsForms.TextMetrics.MaximumCharacterWidth">
+            <summary>フォントの最大文字幅を取得します。</summary>
+        </member>
+        <member name="P:Controls.WindowsForms.TextMetrics.Weight">
+            <summary>フォントの太さを取得します。</summary>
+        </member>
+        <member name="P:Controls.WindowsForms.TextMetrics.Overhang">
+            <summary>太字や斜体などの場合にフォントに付加する幅を取得します。</summary>
+        </member>
+        <member name="P:Controls.WindowsForms.TextMetrics.DigitizedAspectX">
+            <summary>フォントのデザイン対象であるデバイスの水平アスペクトを取得します。</summary>
+        </member>
+        <member name="P:Controls.WindowsForms.TextMetrics.DigitizedAspectY">
+            <summary>フォントのデザイン対象であるデバイスの垂直アスペクトを取得します。</summary>
+        </member>
+        <member name="P:Controls.WindowsForms.TextMetrics.FirstCharacter">
+            <summary>フォントで定義される最初の文字を取得します。</summary>
+        </member>
+        <member name="P:Controls.WindowsForms.TextMetrics.LastCharacter">
+            <summary>フォントで定義される最後の文字を取得します。</summary>
+        </member>
+        <member name="P:Controls.WindowsForms.TextMetrics.FallbackCharacter">
+            <summary>文字がフォントに存在しない場合に、代わりに使用する文字を取得します。</summary>
+        </member>
+        <member name="P:Controls.WindowsForms.TextMetrics.BreakCharacter">
+            <summary>テキストを両端揃えする場合に単語の分割の定義に使用する文字を取得します。</summary>
+        </member>
+        <member name="P:Controls.WindowsForms.TextMetrics.Italic">
+            <summary>フォントが斜体であるかどうかを示す値を取得します。</summary>
+        </member>
+        <member name="P:Controls.WindowsForms.TextMetrics.Underlined">
+            <summary>フォントが下線つきフォントであるかどうかを示す値を取得します。</summary>
+        </member>
+        <member name="P:Controls.WindowsForms.TextMetrics.StruckOut">
+            <summary>フォントが取り消し線つきフォントであるかどうかを示す値を取得します。</summary>
+        </member>
+        <member name="P:Controls.WindowsForms.TextMetrics.IsVariablePitch">
+            <summary>フォントが可変ピッチであるかどうかを示す値を取得します。</summary>
+        </member>
+        <member name="P:Controls.WindowsForms.TextMetrics.IsVector">
+            <summary>フォントがベクトルフォントであるかどうかを示す値を取得します。</summary>
+        </member>
+        <member name="P:Controls.WindowsForms.TextMetrics.IsTrueType">
+            <summary>フォントが TrueType フォントであるかどうかを示す値を取得します。</summary>
+        </member>
+        <member name="P:Controls.WindowsForms.TextMetrics.IsDevice">
+            <summary>フォントがデバイスフォントであるかどうかを示す値を取得します。</summary>
+        </member>
+        <member name="P:Controls.WindowsForms.TextMetrics.FontFamily">
+            <summary>フォントのフォントファミリーを取得します。</summary>
+        </member>
+        <member name="P:Controls.WindowsForms.TextMetrics.CharacterSet">
+            <summary>フォントの文字セットを取得します。</summary>
+        </member>
+        <member name="T:Controls.WindowsForms.FontFamilyType">
+            <summary>フォントファミリーを表します。</summary>
+        </member>
+        <member name="F:Controls.WindowsForms.FontFamilyType.Default">
+            <summary>既定のフォントを使用します。</summary>
+        </member>
+        <member name="F:Controls.WindowsForms.FontFamilyType.Serif">
+            <summary>可変ストローク幅 (プロポーショナル) でセリフのあるフォントを表します。</summary>
+        </member>
+        <member name="F:Controls.WindowsForms.FontFamilyType.SansSerif">
+            <summary>可変ストローク幅 (プロポーショナル) でセリフのないフォントを表します。</summary>
+        </member>
+        <member name="F:Controls.WindowsForms.FontFamilyType.Modern">
+            <summary>固定ストローク幅 (等幅) でセリフはない場合もある場合もあるフォントを表します。等幅フォントは通常 <see cref="F:Controls.WindowsForms.FontFamilyType.Modern"/> です。</summary>
+        </member>
+        <member name="F:Controls.WindowsForms.FontFamilyType.Script">
+            <summary>手書きのようにデザインされたフォントを表します。</summary>
+        </member>
+        <member name="F:Controls.WindowsForms.FontFamilyType.Decorative">
+            <summary>派手に装飾されたフォントを表します。</summary>
+        </member>
+        <member name="T:Controls.WindowsForms.FontCharacterSet">
+            <summary>フォントの文字セットを表します。</summary>
+        </member>
+        <member name="F:Controls.WindowsForms.FontCharacterSet.Ansi">
+            <summary>英語用 Ansi 文字セットです。</summary>
+        </member>
+        <member name="F:Controls.WindowsForms.FontCharacterSet.Default">
+            <summary>既定の文字セットです。</summary>
+        </member>
+        <member name="F:Controls.WindowsForms.FontCharacterSet.Symbol">
+            <summary>シンボルを表す文字セットです。</summary>
+        </member>
+        <member name="F:Controls.WindowsForms.FontCharacterSet.Mac">
+            <summary>Macintosh用文字セットです。</summary>
+        </member>
+        <member name="F:Controls.WindowsForms.FontCharacterSet.ShiftJis">
+            <summary>日本語用 Shift_JIS 文字セットです。</summary>
+        </member>
+        <member name="F:Controls.WindowsForms.FontCharacterSet.Hangul">
+            <summary>韓国語用文字セットです。</summary>
+        </member>
+        <member name="F:Controls.WindowsForms.FontCharacterSet.Johab">
+            <summary>韓国語用 Johab 文字セットです。</summary>
+        </member>
+        <member name="F:Controls.WindowsForms.FontCharacterSet.GB2312">
+            <summary>簡体字中国語用 GB2312 文字セットです。</summary>
+        </member>
+        <member name="F:Controls.WindowsForms.FontCharacterSet.ChiniseBig5">
+            <summary>繁体字中国語用 Big5 文字セットです。</summary>
+        </member>
+        <member name="F:Controls.WindowsForms.FontCharacterSet.Greek">
+            <summary>ギリシャ語用文字セットです。</summary>
+        </member>
+        <member name="F:Controls.WindowsForms.FontCharacterSet.Turkish">
+            <summary>トルコ語用文字セットです。</summary>
+        </member>
+        <member name="F:Controls.WindowsForms.FontCharacterSet.Vietnamese">
+            <summary>ベトナム語用文字セットです。</summary>
+        </member>
+        <member name="F:Controls.WindowsForms.FontCharacterSet.Hebrew">
+            <summary>ヘブライ語用文字セットです。</summary>
+        </member>
+        <member name="F:Controls.WindowsForms.FontCharacterSet.Arabic">
+            <summary>アラビア語用文字セットです。</summary>
+        </member>
+        <member name="F:Controls.WindowsForms.FontCharacterSet.Baltic">
+            <summary>バルト語用文字セットです。</summary>
+        </member>
+        <member name="F:Controls.WindowsForms.FontCharacterSet.Russian">
+            <summary>ロシア語用文字セットです。</summary>
+        </member>
+        <member name="F:Controls.WindowsForms.FontCharacterSet.Thai">
+            <summary>タイ語用文字セットです。</summary>
+        </member>
+        <member name="F:Controls.WindowsForms.FontCharacterSet.EastEurope">
+            <summary>東ヨーロッパ諸国語用文字セットです。</summary>
+        </member>
+        <member name="F:Controls.WindowsForms.FontCharacterSet.Oem">
+            <summary>OEM 文字セットです。</summary>
+        </member>
+        <member name="T:Controls.Wpf.SyntaxHighlightingTextBox">
+            <summary>構文の強調表示が可能なテキストボックスを表します。</summary>
+        </member>
+        <member name="M:Controls.Wpf.SyntaxHighlightingTextBox.#ctor">
+            <summary><see cref="T:Controls.Wpf.SyntaxHighlightingTextBox"/> クラスの新しいインスタンスを初期化します。</summary>
+        </member>
+        <member name="M:Controls.Wpf.SyntaxHighlightingTextBox.OnRender(System.Windows.Media.DrawingContext)">
+            <summary>
+            派生クラスでオーバーライドされると、レイアウト システムから指示されるレンダリング操作に参加します。
+            この要素に対するレンダリング指示は、このメソッドの呼び出し時に直接使用されるわけではなく、
+            後からレイアウト処理や描画処理で非同期に使用されるときまで保存されます。
+            </summary>
+            <param name="drawingContext">特定の要素に対する描画命令。 このコンテキストはレイアウト システムに提供されます。</param>
+        </member>
+        <member name="M:Controls.Wpf.SyntaxHighlightingTextBox.OnTextChanged(System.Windows.Controls.TextChangedEventArgs)">
+            <summary>この編集コントロールの内容が変更されると呼び出されます。</summary>
+            <param name="e"><see cref="E:System.Windows.Controls.Primitives.TextBoxBase.TextChanged"/> イベントに関連付けられている引数。</param>
+        </member>
+        <member name="P:Controls.Wpf.SyntaxHighlightingTextBox.HighlightTokenizer">
+            <summary>このテキストボックス内の文字列を強調表示する方法を表す <see cref="T:Controls.IHighlightTokenizer"/> を取得または設定します。</summary>
+        </member>
+    </members>
+</doc>
