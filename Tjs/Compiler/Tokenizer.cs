@@ -13,10 +13,12 @@ namespace IronTjs.Compiler
 	{
 		TextReader _reader;
 		SourceUnit _sourceUnit;
+		int _lastLength = 0;
 		string _line = string.Empty;
 		int _columnIndex = 0;
 		SourceLocation _baseLocation;
 		CircularBuffer<Token> _tokens = new CircularBuffer<Token>();
+		bool _initial = true;
 
 		public override void Initialize(object state, TextReader sourceReader, SourceUnit sourceUnit, SourceLocation initialLocation)
 		{
@@ -24,6 +26,32 @@ namespace IronTjs.Compiler
 			_sourceUnit = sourceUnit;
 			_baseLocation = initialLocation;
 			Read();
+		}
+
+		static string ReadLineWithLength(TextReader reader, out int length)
+		{
+			StringBuilder sb = new StringBuilder();
+			length = 0;
+			int ch;
+			while (true)
+			{
+				ch = reader.Read();
+				if (ch == -1)
+				{
+					if (sb.Length > 0)
+						return sb.ToString();
+					return null;
+				}
+				length++;
+				if (ch == 13 && reader.Peek() == 10)
+				{
+					reader.Read();
+					length++;
+				}
+				if (ch == 13 || ch == 10)
+					return sb.ToString();
+				sb.Append((char)ch);
+			}
 		}
 
 		// ソースコード解析のための整形 (改行、空白、コメントの除去)
@@ -36,8 +64,11 @@ namespace IronTjs.Compiler
 					return new Token(TokenType.EndOfStream, null, new SourceSpan(_baseLocation, _baseLocation));
 				if (_columnIndex >= _line.Length) // 行終わりなので次の行を読む
 				{
-					_baseLocation = new SourceLocation(_baseLocation.Index + _line.Length, _baseLocation.Line + 1, 1);
-					_line = _reader.ReadLine();
+					if (!_initial)
+						_baseLocation = new SourceLocation(_baseLocation.Index + _lastLength, _baseLocation.Line + 1, 1);
+					else
+						_initial = false;
+					_line = ReadLineWithLength(_reader, out _lastLength);
 					if (_line == null)
 						return new Token(TokenType.EndOfStream, null, new SourceSpan(_baseLocation, _baseLocation));
 					_columnIndex = 0;
