@@ -115,14 +115,14 @@
 			this.tsmiOpen.ImageTransparentColor = System.Drawing.Color.Magenta;
 			this.tsmiOpen.Name = "tsmiOpen";
 			this.tsmiOpen.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O)));
-			this.tsmiOpen.Size = new System.Drawing.Size(201, 22);
+			this.tsmiOpen.Size = new System.Drawing.Size(202, 22);
 			this.tsmiOpen.Text = "開く(&O)";
 			this.tsmiOpen.Click += new System.EventHandler(this.tsmiOpen_Click);
 			// 
 			// tssFile1
 			// 
 			this.tssFile1.Name = "tssFile1";
-			this.tssFile1.Size = new System.Drawing.Size(198, 6);
+			this.tssFile1.Size = new System.Drawing.Size(199, 6);
 			// 
 			// tsmiSave
 			// 
@@ -130,26 +130,26 @@
 			this.tsmiSave.ImageTransparentColor = System.Drawing.Color.Magenta;
 			this.tsmiSave.Name = "tsmiSave";
 			this.tsmiSave.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.S)));
-			this.tsmiSave.Size = new System.Drawing.Size(201, 22);
+			this.tsmiSave.Size = new System.Drawing.Size(202, 22);
 			this.tsmiSave.Text = "上書き保存(&S)";
 			this.tsmiSave.Click += new System.EventHandler(this.tsmiSave_Click);
 			// 
 			// tsmiSaveAs
 			// 
 			this.tsmiSaveAs.Name = "tsmiSaveAs";
-			this.tsmiSaveAs.Size = new System.Drawing.Size(201, 22);
+			this.tsmiSaveAs.Size = new System.Drawing.Size(202, 22);
 			this.tsmiSaveAs.Text = "名前を付けて保存(&A)";
 			this.tsmiSaveAs.Click += new System.EventHandler(this.tsmiSaveAs_Click);
 			// 
 			// tssFile2
 			// 
 			this.tssFile2.Name = "tssFile2";
-			this.tssFile2.Size = new System.Drawing.Size(198, 6);
+			this.tssFile2.Size = new System.Drawing.Size(199, 6);
 			// 
 			// tsmiExit
 			// 
 			this.tsmiExit.Name = "tsmiExit";
-			this.tsmiExit.Size = new System.Drawing.Size(201, 22);
+			this.tsmiExit.Size = new System.Drawing.Size(202, 22);
 			this.tsmiExit.Text = "終了(&X)";
 			this.tsmiExit.Click += new System.EventHandler(this.tsmiExit_Click);
 			// 

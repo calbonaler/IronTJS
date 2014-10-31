@@ -43,6 +43,25 @@ namespace IronTjs
 			rtbSource.LanguageOption = RichTextBoxLanguageOptions.UIFonts;
 			rtbSource.HighlightTokenizer = new HighlightTokenizer(rtbSource);
 			rtbSource.SetTabStops(16);
+			var dir = new DirectoryInfo("samples");
+			if (dir.Exists)
+			{
+				var topItem = new ToolStripMenuItem("TJSサンプルスクリプト(&T)");
+				tsmiFile.DropDownItems.Insert(2, topItem);
+				foreach (var item in dir.EnumerateFiles("*.tjs", SearchOption.TopDirectoryOnly))
+				{
+					var targetItem = topItem.DropDownItems.Add(item.Name);
+					targetItem.Tag = item.FullName;
+					targetItem.Click += SampleScript_Click;
+				}
+			}
+		}
+
+		void SampleScript_Click(object sender, EventArgs e)
+		{
+			var file = ((ToolStripItem)sender).Tag.ToString();
+			if (File.Exists(file))
+				OpenFile(file);
 		}
 
 		class DefaultHostingProvider : Microsoft.Scripting.Runtime.DynamicRuntimeHostingProvider
@@ -163,6 +182,12 @@ namespace IronTjs
 			}
 		}
 
+		void OpenFile(string fileName)
+		{
+			rtbSource.Text = File.ReadAllText(fileName, Encoding.UTF8);
+			savedFileName = fileName;
+		}
+
 		void tsmiNew_Click(object sender, EventArgs e) { rtbSource.Clear(); }
 
 		void tsmiOpen_Click(object sender, EventArgs e)
@@ -171,7 +196,7 @@ namespace IronTjs
 			{
 				dialog.Filter = "TJSソースコード|*.tjs";
 				if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-					rtbSource.Text = File.ReadAllText(dialog.FileName, Encoding.UTF8);
+					OpenFile(dialog.FileName);
 			}
 		}
 
